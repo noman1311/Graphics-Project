@@ -40,10 +40,14 @@ All transformations are given as vectors in the format `(x, y, z)`.
 *   **Translation**: `(0.0, 15.0, 0.0)`
 *   **Color**: `(0.9, 0.9, 0.9)`
 
-### Light Source
-*   **Primitive**: Sphere
-*   **Scaling**: `(1.0, 1.0, 1.0)`
-*   **Translation**: `(0.0, 14.0, 0.0)`
+### Door (West / Left Wall)
+*   **Door Leaf**: Cube, Scale `(0.06, 6.4, 2.54)`, Trans `(-14.94, 3.25, -3.0)`
+*   **Frame Jambs (x2)**: Cubes, Scale `(0.12, 6.5, 0.16)`, Trans `(-14.93, 3.25, -4.35)` and `(-14.93, 3.25, -1.65)`
+*   **Frame Header**: Cube, Scale `(0.12, 0.18, 2.86)`, Trans `(-14.93, 6.56, -3.0)`
+*   **Threshold / Saddle**: Cube, Scale `(0.14, 0.06, 2.70)`, Trans `(-14.92, 0.03, -3.0)`
+*   **Recessed Inset Panels (x4)**: Cubes, Upper Scale `(0.02, 2.2, 0.90)` at `(-14.918, 4.75, -3.65)` and `(-14.918, 4.75, -2.35)`; Lower Scale `(0.02, 2.0, 0.90)` at `(-14.918, 1.75, -3.65)` and `(-14.918, 1.75, -2.35)`
+*   **Brass Backplate**: Cube, Scale `(0.02, 0.55, 0.12)`, Trans `(-14.902, 3.20, -2.05)`
+*   **Brass Lever Handle**: Cylinders, Stem Scale `(0.04, 0.09, 0.04)` at `(-14.86, 3.30, -2.05)` Rot `(0, 0, 90)`; Grip Scale `(0.035, 0.24, 0.035)` at `(-14.81, 3.30, -2.15)` Rot `(90, 0, 0)`
 
 ---
 
@@ -105,9 +109,11 @@ All transformations are given as vectors in the format `(x, y, z)`.
 *   **Bottom Border**: Cube, Scale `(2.6, 0.2, 0.2)`, Trans `(-8.0, 3.65, 6.4)`
 *   **Pockets (x4)**: Cylinders, Scale `(0.3, 0.1, 0.3)`, Trans `(-9.2, 3.56, 3.8)`, `(-9.2, 3.56, 6.2)`, `(-6.8, 3.56, 3.8)`, `(-6.8, 3.56, 6.2)`
 *   **Legs (x4)**: Cubes, Scale `(0.15, 3.5, 0.15)`, Trans `(-9.4, 1.75, 3.6)`, `(-9.4, 1.75, 6.4)`, `(-6.6, 1.75, 3.6)`, `(-6.6, 1.75, 6.4)`
-*   **White Coin**: Cylinder, Scale `(0.15, 0.05, 0.15)`, Trans `(-8.0, 3.575, 5.0)`
-*   **Black Coin**: Cylinder, Scale `(0.15, 0.05, 0.15)`, Trans `(-7.8, 3.575, 4.8)`
-*   **Red Striker**: Cylinder, Scale `(0.2, 0.06, 0.2)`, Trans `(-8.5, 3.58, 5.8)`
+*   **Pieces (Opening Break Circle)**:
+    *   **Queen (Red)**: Cylinder, Scale `(0.16, 0.05, 0.16)`, Trans `(-8.000, 3.575, 5.000)`
+    *   **Inner Ring (x6 alternating White/Black, r=0.17)**: Cylinders, Scale `(0.16, 0.05, 0.16)`, Trans `(-7.830, 3.575, 5.000)` (W), `(-7.915, 3.575, 5.147)` (B), `(-8.085, 3.575, 5.147)` (W), `(-8.170, 3.575, 5.000)` (B), `(-8.085, 3.575, 4.853)` (W), `(-7.915, 3.575, 4.853)` (B)
+    *   **Outer Ring (x6 alternating Black/White, r=0.33)**: Cylinders, Scale `(0.16, 0.05, 0.16)`, Trans `(-7.714, 3.575, 5.165)` (B), `(-8.000, 3.575, 5.330)` (W), `(-8.286, 3.575, 5.165)` (B), `(-8.286, 3.575, 4.835)` (W), `(-8.000, 3.575, 4.670)` (B), `(-7.714, 3.575, 4.835)` (W)
+    *   **Striker**: Cylinder, Scale `(0.22, 0.06, 0.22)`, Trans `(-8.000, 3.580, 6.000)`
 
 **Carrom Board 2**
 *   **Board Base**: Cube, Scale `(3.0, 0.1, 3.0)`, Trans `(8.0, 3.5, 5.0)`
@@ -117,15 +123,18 @@ All transformations are given as vectors in the format `(x, y, z)`.
 *   **Bottom Border**: Cube, Scale `(2.6, 0.2, 0.2)`, Trans `(8.0, 3.65, 6.4)`
 *   **Pockets (x4)**: Cylinders, Scale `(0.3, 0.1, 0.3)`, Trans `(6.8, 3.56, 3.8)`, `(6.8, 3.56, 6.2)`, `(9.2, 3.56, 3.8)`, `(9.2, 3.56, 6.2)`
 *   **Legs (x4)**: Cubes, Scale `(0.15, 3.5, 0.15)`, Trans `(6.6, 1.75, 3.6)`, `(6.6, 1.75, 6.4)`, `(9.4, 1.75, 3.6)`, `(9.4, 1.75, 6.4)`
-*   **White Coin**: Cylinder, Scale `(0.15, 0.05, 0.15)`, Trans `(8.0, 3.575, 5.0)`
-*   **Black Coin**: Cylinder, Scale `(0.15, 0.05, 0.15)`, Trans `(8.2, 3.575, 4.8)`
-*   **Red Striker**: Cylinder, Scale `(0.2, 0.06, 0.2)`, Trans `(7.5, 3.58, 5.8)`
+*   **Pieces (Active Mid-Game Scatter)**:
+    *   **Queen (Red)**: Cylinder, Scale `(0.16, 0.05, 0.16)`, Trans `(7.85, 3.575, 4.80)`
+    *   **White Coins (x5)**: Cylinders, Scale `(0.16, 0.05, 0.16)`, Trans `(7.15, 3.575, 4.10)`, `(8.85, 3.575, 5.90)`, `(8.40, 3.575, 5.25)`, `(7.60, 3.575, 5.35)`, `(8.15, 3.575, 4.35)`
+    *   **Black Coins (x5)**: Cylinders, Scale `(0.16, 0.05, 0.16)`, Trans `(8.85, 3.575, 4.15)`, `(7.20, 3.575, 5.85)`, `(7.95, 3.575, 4.50)`, `(8.45, 3.575, 4.75)`, `(7.70, 3.575, 5.05)`
+    *   **Striker**: Cylinder, Scale `(0.22, 0.06, 0.22)`, Trans `(7.50, 3.580, 6.00)`
 
 ### Table Tennis Board
 **Tabletop**
 *   **Primitive**: Cube
 *   **Scaling**: `(8.0, 0.2, 5.0)`
 *   **Translation**: `(0.0, 3.0, 0.0)`
+*   **Color / Texture**: ITTF Tournament Blue procedural surface with crisp white boundary and center lines, dark blue edge apron `(0.05, 0.15, 0.38)`
 
 **Net**
 *   **Primitive**: Cube
@@ -139,14 +148,14 @@ All transformations are given as vectors in the format `(x, y, z)`.
 
 ### Table Tennis Equipment
 **Paddle 1 (Red)**
-*   **Blade**: Cylinder, Scale `(0.4, 0.05, 0.4)`, Trans `(2.0, 3.5, 0.0)`, Rotation `(90.0, 0.0, 0.0)`
-*   **Handle**: Cylinder, Scale `(0.08, 0.4, 0.08)`, Trans `(2.0, 3.1, 0.0)`
+*   **Blade**: Cylinder, Scale `(0.40, 0.04, 0.40)`, Trans `(2.0, 3.125, 0.0)`, Rotation `(0.0, 0.0, 0.0)`
+*   **Handle**: Cylinder, Scale `(0.08, 0.32, 0.04)`, Trans `(2.0, 3.125, 0.31)`, Rotation `(90.0, 0.0, 0.0)`
 
 **Paddle 2 (Blue)**
-*   **Blade**: Cylinder, Scale `(0.4, 0.05, 0.4)`, Trans `(-2.0, 3.5, 0.0)`, Rotation `(90.0, 0.0, 0.0)`
-*   **Handle**: Cylinder, Scale `(0.08, 0.4, 0.08)`, Trans `(-2.0, 3.1, 0.0)`
+*   **Blade**: Cylinder, Scale `(0.40, 0.04, 0.40)`, Trans `(-2.0, 3.125, 0.0)`, Rotation `(0.0, 0.0, 0.0)`
+*   **Handle**: Cylinder, Scale `(0.08, 0.32, 0.04)`, Trans `(-2.0, 3.125, -0.31)`, Rotation `(90.0, 0.0, 0.0)`
 
 **TT Ball**
 *   **Primitive**: Sphere
-*   **Scaling**: `(0.1, 0.1, 0.1)`
-*   **Translation**: `(0.5, 3.15, 0.5)`
+*   **Scaling**: `(0.10, 0.10, 0.10)`
+*   **Translation**: `(0.5, 3.155, 0.5)`

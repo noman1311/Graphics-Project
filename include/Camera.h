@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <cmath>
 
 class Camera
 {
@@ -17,10 +18,18 @@ public:
     float Yaw;
     float Pitch;
 
-    Camera(glm::vec3 position = glm::vec3(0.0f, 5.0f, 15.0f)) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), Yaw(-90.0f), Pitch(-20.0f)
+    // Default constructor: eye at (0,5,15), looking at origin.
+    Camera(glm::vec3 position = glm::vec3(0.0f, 5.0f, 15.0f),
+           glm::vec3 target   = glm::vec3(0.0f, 0.0f, 0.0f))
+        : Front(glm::vec3(0.0f, 0.0f, -1.0f)),
+          WorldUp(glm::vec3(0.0f, 1.0f, 0.0f)),
+          Yaw(-90.0f), Pitch(0.0f)
     {
         Position = position;
-        WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        // Compute Yaw/Pitch from the target so the look direction is honored.
+        glm::vec3 dir = glm::normalize(target - position);
+        Yaw   = glm::degrees(atan2f(dir.z, dir.x));
+        Pitch = glm::degrees(asinf(dir.y));
         updateCameraVectors();
     }
 
@@ -29,7 +38,6 @@ public:
         return glm::lookAt(Position, Position + Front, Up);
     }
 
-private:
     void updateCameraVectors()
     {
         glm::vec3 front;
@@ -37,7 +45,7 @@ private:
         front.y = sin(glm::radians(Pitch));
         front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
         Front = glm::normalize(front);
-        Right = glm::normalize(glm::cross(Front, WorldUp));  
+        Right = glm::normalize(glm::cross(Front, WorldUp));
         Up    = glm::normalize(glm::cross(Right, Front));
     }
 };

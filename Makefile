@@ -1,7 +1,7 @@
 CXX = D:/Mingw_compiler/ucrt64/bin/g++.exe
-CXXFLAGS = -Iinclude -g -fdiagnostics-color=always
+CXXFLAGS = -Iinclude -O2 -g -fdiagnostics-color=always
 LDFLAGS = -Llib -lglfw3 -lopengl32 -lgdi32
-SRCS = main.cpp src/glad.c src/Scene.cpp
+SRCS = main.cpp src/glad.c src/Scene.cpp src/Texture.cpp src/ProceduralTextures.cpp
 TARGET = my_opengl_app.exe
 
 all: $(TARGET)
@@ -10,7 +10,7 @@ $(TARGET): $(SRCS)
 	$(CXX) $(CXXFLAGS) $(SRCS) -o $(TARGET) $(LDFLAGS)
 
 clean:
-	del $(TARGET)
+	cmd /C del /Q $(TARGET)
 
 run: $(TARGET)
 	.\$(TARGET)

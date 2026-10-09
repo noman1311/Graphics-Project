@@ -6,9 +6,12 @@
             "command": "D:\\Mingw_compiler\\ucrt64\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
+                "-O2",
                 "-g",
                 "src/glad.c",
                 "src/Scene.cpp",
+                "src/Texture.cpp",
+                "src/ProceduralTextures.cpp",
                 "main.cpp",
                 "-I${workspaceFolder}/include",
                 "-L${workspaceFolder}/lib",

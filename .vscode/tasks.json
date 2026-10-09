@@ -1,0 +1,35 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: Build OpenGL Project",
+            "command": "D:\\Mingw_compiler\\ucrt64\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "src/glad.c",
+                "src/Scene.cpp",
+                "main.cpp",
+                "-I${workspaceFolder}/include",
+                "-L${workspaceFolder}/lib",
+                "-lglfw3",
+                "-lopengl32",
+                "-lgdi32",
+                "-o",
+                "${workspaceFolder}/my_opengl_app.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Task generated to build the OpenGL project."
+        }
+    ],
+    "version": "2.0.0"
+}

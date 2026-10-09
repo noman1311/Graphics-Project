@@ -426,6 +426,342 @@ namespace ProceduralTextures
         });
     }
 
+    Texture ChessBoardSurface(int w, int h)
+    {
+        return Texture::CreateProcedural(w, h, "chess_surface", true,
+            [](unsigned char* data, int W, int H)
+        {
+            const float grid_min = 0.075f;
+            const float grid_max = 0.925f;
+            const float grid_size = grid_max - grid_min;
+            const float sq_size = grid_size / 8.0f;
+
+            const glm::vec3 c_border1(0.33f, 0.16f, 0.09f);
+            const glm::vec3 c_border2(0.22f, 0.10f, 0.05f);
+            const glm::vec3 c_gold   (0.85f, 0.69f, 0.30f);
+            const glm::vec3 c_inlayDark(0.14f, 0.07f, 0.04f);
+
+            const glm::vec3 c_maple1 (0.93f, 0.86f, 0.72f);
+            const glm::vec3 c_maple2 (0.88f, 0.80f, 0.65f);
+
+            const glm::vec3 c_walnut1(0.35f, 0.19f, 0.11f);
+            const glm::vec3 c_walnut2(0.23f, 0.12f, 0.06f);
+
+            const float aa = 1.0f / (float)W;
+
+            for (int y = 0; y < H; ++y)
+            {
+                float v = (float)y / (float)H;
+                for (int x = 0; x < W; ++x)
+                {
+                    float u = (float)x / (float)W;
+                    glm::vec3 col;
+
+                    if (u >= grid_min && u <= grid_max && v >= grid_min && v <= grid_max)
+                    {
+                        int file_idx = std::clamp((int)((u - grid_min) / sq_size), 0, 7);
+                        int rank_idx = std::clamp((int)((v - grid_min) / sq_size), 0, 7);
+                        bool is_light = ((file_idx + rank_idx) % 2 == 1);
+
+                        float sq_u = (u - (grid_min + file_idx * sq_size)) / sq_size;
+                        float sq_v = (v - (grid_min + rank_idx * sq_size)) / sq_size;
+                        float dist_edge = std::min({sq_u, 1.0f - sq_u, sq_v, 1.0f - sq_v}) * sq_size;
+
+                        if (is_light)
+                        {
+                            // Fine curly maple grain
+                            float g1 = FBM(u * 120.0f, v * 15.0f, 3, 2.0f, 0.5f);
+                            float g2 = 0.5f + 0.5f * std::sin(u * 280.0f + v * 20.0f);
+                            float t = std::clamp(g1 * 0.40f + g2 * 0.15f, 0.0f, 1.0f);
+                            col = glm::mix(c_maple1, c_maple2, t);
+                        }
+                        else
+                        {
+                            // Deep rich walnut grain
+                            float g1 = FBM(u * 12.0f, v * 160.0f, 4, 2.0f, 0.5f);
+                            float g2 = 0.5f + 0.5f * std::sin(v * 320.0f + u * 25.0f);
+                            float t = std::clamp(g1 * 0.45f + g2 * 0.18f, 0.0f, 1.0f);
+                            col = glm::mix(c_walnut1, c_walnut2, t);
+                        }
+
+                        // Subtle veneer seams between adjacent squares
+                        if (dist_edge < 0.0015f)
+                        {
+                            float seam = dist_edge / 0.0015f;
+                            col *= (0.65f + 0.35f * seam);
+                        }
+                    }
+                    else
+                    {
+                        // Rich polished rosewood border with grain
+                        float g_border = FBM(u * 35.0f, v * 35.0f, 3, 2.0f, 0.5f);
+                        col = glm::mix(c_border1, c_border2, g_border);
+
+                        float d_u = std::max({grid_min - u, u - grid_max, 0.0f});
+                        float d_v = std::max({grid_min - v, v - grid_max, 0.0f});
+                        float d_to_grid = std::max(d_u, d_v);
+
+                        // Brass / Boxwood Inlay stringing 1 (at 0.008 from grid)
+                        float dLine1 = std::abs(d_to_grid - 0.008f);
+                        if (dLine1 < 0.0026f)
+                        {
+                            float covGold = 1.0f - glm::smoothstep(0.0014f - aa, 0.0014f + aa, dLine1);
+                            col = glm::mix(col, c_inlayDark, 1.0f);
+                            col = glm::mix(col, c_gold, covGold);
+                        }
+
+                        // Brass / Boxwood Inlay stringing 2 (at 0.016 from grid)
+                        float dLine2 = std::abs(d_to_grid - 0.016f);
+                        if (dLine2 < 0.0022f)
+                        {
+                            float covGold = 1.0f - glm::smoothstep(0.0012f - aa, 0.0012f + aa, dLine2);
+                            col = glm::mix(col, c_inlayDark, 1.0f);
+                            col = glm::mix(col, c_gold, covGold);
+                        }
+
+                        // Outer border chamfer shadow
+                        float edge_dist = std::min({u, 1.0f - u, v, 1.0f - v});
+                        if (edge_dist < 0.025f)
+                        {
+                            float shadow = edge_dist / 0.025f;
+                            col *= (0.50f + 0.50f * shadow);
+                        }
+                    }
+
+                    int idx = (y * W + x) * 4;
+                    data[idx + 0] = ClampByte(col.r * 255.0f);
+                    data[idx + 1] = ClampByte(col.g * 255.0f);
+                    data[idx + 2] = ClampByte(col.b * 255.0f);
+                    data[idx + 3] = 255;
+                }
+            }
+        });
+    }
+
+    Texture ClockDial(int w, int h)
+    {
+        return Texture::CreateProcedural(w, h, "clock_dial", true,
+            [](unsigned char* data, int W, int H)
+        {
+            const glm::vec3 c_dialCenter(0.985f, 0.980f, 0.965f);
+            const glm::vec3 c_dialEdge  (0.935f, 0.920f, 0.885f);
+            const glm::vec3 c_black     (0.06f, 0.06f, 0.08f);
+            const glm::vec3 c_brass     (0.82f, 0.65f, 0.28f);
+
+            const float aa = 1.0f / (float)W;
+
+            // Stroke definitions for digits 0-9 in normalized box [-0.5..0.5, -0.5..0.5]
+            struct Stroke2D { float x1, y1, x2, y2; };
+            auto addDigitStrokes = [](char d, float bx, float by, float cw, float ch, std::vector<Stroke2D>& out) {
+                auto addS = [&](float x1, float y1, float x2, float y2) {
+                    out.push_back({bx + x1 * cw, by + y1 * ch, bx + x2 * cw, by + y2 * ch});
+                };
+                switch (d) {
+                case '0':
+                    addS(-0.35f, -0.50f,  0.35f, -0.50f);
+                    addS( 0.35f, -0.50f,  0.35f,  0.50f);
+                    addS( 0.35f,  0.50f, -0.35f,  0.50f);
+                    addS(-0.35f,  0.50f, -0.35f, -0.50f);
+                    break;
+                case '1':
+                    addS( 0.00f, -0.50f,  0.00f,  0.50f);
+                    addS(-0.20f, -0.30f,  0.00f, -0.50f);
+                    addS(-0.25f,  0.50f,  0.25f,  0.50f);
+                    break;
+                case '2':
+                    addS(-0.35f, -0.50f,  0.35f, -0.50f);
+                    addS( 0.35f, -0.50f,  0.35f,  0.00f);
+                    addS( 0.35f,  0.00f, -0.35f,  0.00f);
+                    addS(-0.35f,  0.00f, -0.35f,  0.50f);
+                    addS(-0.35f,  0.50f,  0.35f,  0.50f);
+                    break;
+                case '3':
+                    addS(-0.35f, -0.50f,  0.35f, -0.50f);
+                    addS( 0.35f, -0.50f,  0.35f,  0.50f);
+                    addS( 0.35f,  0.50f, -0.35f,  0.50f);
+                    addS(-0.15f,  0.00f,  0.35f,  0.00f);
+                    break;
+                case '4':
+                    addS(-0.35f, -0.50f, -0.35f,  0.00f);
+                    addS(-0.35f,  0.00f,  0.35f,  0.00f);
+                    addS( 0.20f, -0.50f,  0.20f,  0.50f);
+                    break;
+                case '5':
+                    addS( 0.35f, -0.50f, -0.35f, -0.50f);
+                    addS(-0.35f, -0.50f, -0.35f,  0.00f);
+                    addS(-0.35f,  0.00f,  0.35f,  0.00f);
+                    addS( 0.35f,  0.00f,  0.35f,  0.50f);
+                    addS( 0.35f,  0.50f, -0.35f,  0.50f);
+                    break;
+                case '6':
+                    addS( 0.35f, -0.50f, -0.35f, -0.50f);
+                    addS(-0.35f, -0.50f, -0.35f,  0.50f);
+                    addS(-0.35f,  0.50f,  0.35f,  0.50f);
+                    addS( 0.35f,  0.50f,  0.35f,  0.00f);
+                    addS( 0.35f,  0.00f, -0.35f,  0.00f);
+                    break;
+                case '7':
+                    addS(-0.35f, -0.50f,  0.35f, -0.50f);
+                    addS( 0.35f, -0.50f, -0.05f,  0.50f);
+                    break;
+                case '8':
+                    addS(-0.35f, -0.50f,  0.35f, -0.50f);
+                    addS( 0.35f, -0.50f,  0.35f,  0.50f);
+                    addS( 0.35f,  0.50f, -0.35f,  0.50f);
+                    addS(-0.35f,  0.50f, -0.35f, -0.50f);
+                    addS(-0.35f,  0.00f,  0.35f,  0.00f);
+                    break;
+                case '9':
+                    addS( 0.35f,  0.00f, -0.35f,  0.00f);
+                    addS(-0.35f,  0.00f, -0.35f, -0.50f);
+                    addS(-0.35f, -0.50f,  0.35f, -0.50f);
+                    addS( 0.35f, -0.50f,  0.35f,  0.50f);
+                    addS( 0.35f,  0.50f, -0.35f,  0.50f);
+                    break;
+                }
+            };
+
+            // Precompute strokes for hours 1 through 12
+            const float r_num = 0.355f;
+            const float char_w = 0.040f;
+            const float char_h = 0.058f;
+            const float spacing = 0.046f;
+            std::vector<Stroke2D> numeralStrokes;
+
+            for (int h = 1; h <= 12; ++h)
+            {
+                float ang = (float)h * (3.14159265f / 6.0f) - 3.14159265f * 0.5f;
+                float cx = r_num * std::cos(ang);
+                float cy = r_num * std::sin(ang);
+
+                std::string s = std::to_string(h);
+                float total_w = (float)s.length() * spacing;
+                float start_x = cx - total_w * 0.5f + spacing * 0.5f;
+
+                for (size_t i = 0; i < s.length(); ++i)
+                {
+                    float bx = start_x + (float)i * spacing;
+                    float by = cy;
+                    addDigitStrokes(s[i], bx, by, char_w, char_h, numeralStrokes);
+                }
+            }
+
+            auto distSeg = [](float px, float py, float ax, float ay, float bx, float by) -> float {
+                float dx = bx - ax;
+                float dy = by - ay;
+                float l2 = dx * dx + dy * dy;
+                if (l2 < 1e-7f) return std::hypot(px - ax, py - ay);
+                float t = std::clamp(((px - ax) * dx + (py - ay) * dy) / l2, 0.0f, 1.0f);
+                return std::hypot(px - (ax + t * dx), py - (ay + t * dy));
+            };
+
+            for (int y = 0; y < H; ++y)
+            {
+                float v = (float)y / (float)H;
+                float y_rel = v - 0.5f;
+
+                for (int x = 0; x < W; ++x)
+                {
+                    float u = (float)x / (float)W;
+                    float x_rel = u - 0.5f;
+
+                    float r = std::hypot(x_rel, y_rel);
+                    float theta = std::atan2(y_rel, x_rel);
+
+                    float t_r = std::clamp(r / 0.48f, 0.0f, 1.0f);
+                    glm::vec3 col = glm::mix(c_dialCenter, c_dialEdge, t_r);
+
+                    // Outer perimeter shadow
+                    if (r > 0.470f)
+                    {
+                        float shadow = std::min(1.0f, (r - 0.470f) / 0.025f);
+                        col *= (1.0f - 0.45f * shadow);
+                    }
+
+                    // Outer track ring
+                    float dOuter = std::abs(r - 0.468f);
+                    if (dOuter < 0.0022f + aa)
+                    {
+                        float cov = 1.0f - glm::smoothstep(0.0016f - aa, 0.0016f + aa, dOuter);
+                        col = glm::mix(col, c_black, cov);
+                    }
+
+                    // Inner railway track ring
+                    float dTrack = std::abs(r - 0.442f);
+                    if (dTrack < 0.0020f + aa)
+                    {
+                        float cov = 1.0f - glm::smoothstep(0.0014f - aa, 0.0014f + aa, dTrack);
+                        col = glm::mix(col, c_black, cov);
+                    }
+
+                    // 60-Minute tick marks between 0.442 and 0.468
+                    if (r >= 0.442f - aa && r <= 0.468f + aa)
+                    {
+                        const float step_min = 3.14159265f / 30.0f; // 6 degrees
+                        float phi = std::abs(std::fmod(theta + 3.14159265f + step_min * 0.5f, step_min) - step_min * 0.5f);
+                        float d_tick = phi * r;
+                        if (d_tick < 0.0016f + aa)
+                        {
+                            float cov = 1.0f - glm::smoothstep(0.0011f - aa, 0.0011f + aa, d_tick);
+                            col = glm::mix(col, c_black, cov);
+                        }
+                    }
+
+                    // 12 Hour Batons outside the numbers (from 0.418 to 0.442)
+                    const float step_hour = 3.14159265f / 6.0f; // 30 degrees
+                    float phi_h = std::abs(std::fmod(theta + 3.14159265f + step_hour * 0.5f, step_hour) - step_hour * 0.5f);
+                    if (r >= 0.418f - aa && r <= 0.442f + aa)
+                    {
+                        float d_hour = phi_h * r;
+                        if (d_hour < 0.0036f + aa)
+                        {
+                            float cov = 1.0f - glm::smoothstep(0.0028f - aa, 0.0028f + aa, d_hour);
+                            col = glm::mix(col, c_black, cov);
+                        }
+                    }
+
+                    // Vector Hour Numerals (1 through 12) between r = 0.27 and 0.42
+                    if (r >= 0.27f && r <= 0.42f)
+                    {
+                        float min_d = 999.0f;
+                        for (const auto& s : numeralStrokes)
+                        {
+                            float d = distSeg(x_rel, y_rel, s.x1, s.y1, s.x2, s.y2);
+                            if (d < min_d) min_d = d;
+                        }
+                        if (min_d < 0.0036f + aa)
+                        {
+                            float covNum = 1.0f - glm::smoothstep(0.0030f - aa, 0.0030f + aa, min_d);
+                            col = glm::mix(col, c_black, covNum);
+                        }
+                    }
+
+                    // Inner chapter ring at r = 0.240
+                    float dInner = std::abs(r - 0.240f);
+                    if (dInner < 0.0018f + aa)
+                    {
+                        float cov = 1.0f - glm::smoothstep(0.0012f - aa, 0.0012f + aa, dInner);
+                        col = glm::mix(col, c_black, cov);
+                    }
+
+                    // Center brass accent ring at r = 0.035
+                    float dCenter = std::abs(r - 0.035f);
+                    if (dCenter < 0.0020f + aa)
+                    {
+                        float cov = 1.0f - glm::smoothstep(0.0014f - aa, 0.0014f + aa, dCenter);
+                        col = glm::mix(col, c_brass, cov);
+                    }
+
+                    int idx = (y * W + x) * 4;
+                    data[idx + 0] = ClampByte(col.r * 255.0f);
+                    data[idx + 1] = ClampByte(col.g * 255.0f);
+                    data[idx + 2] = ClampByte(col.b * 255.0f);
+                    data[idx + 3] = 255;
+                }
+            }
+        });
+    }
+
     Texture Sky(int w, int h)
     {
         return Texture::CreateProcedural(w, h, "sky", true,

@@ -49,6 +49,19 @@ All transformations are given as vectors in the format `(x, y, z)`.
 *   **Brass Backplate**: Cube, Scale `(0.02, 0.55, 0.12)`, Trans `(-14.902, 3.20, -2.05)`
 *   **Brass Lever Handle**: Cylinders, Stem Scale `(0.04, 0.09, 0.04)` at `(-14.86, 3.30, -2.05)` Rot `(0, 0, 90)`; Grip Scale `(0.035, 0.24, 0.035)` at `(-14.81, 3.30, -2.15)` Rot `(90, 0, 0)`
 
+### Wall Clock (Back / North Wall)
+Mounted centrally on the Back/North wall directly above the window at `(0.0, 10.5, -14.88)`.
+*   **Outer Case / Bezel**: Cylinder, Scale `(1.86, 0.12, 1.86)`, Trans `(0.0, 10.5, -14.92)`, Rotation `(90.0, 0.0, 0.0)`
+*   **Inner Stepped Brass Trim**: Cylinder, Scale `(1.72, 0.03, 1.72)`, Trans `(0.0, 10.5, -14.865)`, Rotation `(90.0, 0.0, 0.0)`
+*   **Clock Dial**: Cylinder, Scale `(1.64, 0.015, 1.64)`, Trans `(0.0, 10.5, -14.850)`, Rotation `(90.0, 0.0, 0.0)`
+*   **Procedural Dial Texture**: 1024x1024 high-resolution enamel railway dial featuring 60-minute tick track, 12 bold hour indices with cardinal emphasis (12, 3, 6, 9), 12 brass-accented pips, inner chapter ring, and brass center ring.
+*   **Hour Hand**: Cube, Scale `(0.052, 0.54, 0.010)`, dynamically rotated around Z by $-30^\circ \times (\text{hour} + \text{min}/60)$ reflecting live local time.
+*   **Minute Hand**: Cube, Scale `(0.036, 0.78, 0.008)`, dynamically rotated around Z by $-6^\circ \times (\text{min} + \text{sec}/60)$ reflecting live local time.
+*   **Second Hand**: Cube, Scale `(0.014, 0.88, 0.006)` in vivid crimson red, dynamically rotated around Z by $-6^\circ \times \text{sec}$ with smooth sub-second sweep.
+*   **Counterbalance Disc**: Cylinder, Scale `(0.045, 0.008, 0.045)`, Trans `(tailX, tailY, -14.807)`, Rotation `(90.0, 0.0, 0.0)`
+*   **Center Hub & Cap**: Cylinder, Scale `(0.075, 0.016, 0.075)`, Trans `(0.0, 10.5, -14.800)`, Rotation `(90.0, 0.0, 0.0)` with dome Sphere `(0.038, 0.038, 0.038)` at `(0.0, 10.5, -14.790)`
+*   **Protective Glass Lens**: Cylinder, Scale `(1.68, 0.008, 1.68)`, Trans `(0.0, 10.5, -14.782)`, Rotation `(90.0, 0.0, 0.0)`
+
 ---
 
 ## Furniture
@@ -159,3 +172,98 @@ All transformations are given as vectors in the format `(x, y, z)`.
 *   **Primitive**: Sphere
 *   **Scaling**: `(0.10, 0.10, 0.10)`
 *   **Translation**: `(0.5, 3.155, 0.5)`
+
+### Chess Set (on Dining / Games Table)
+
+**Chess Board**
+*   **Plinth / Base Molding**: Cube, Scale `(1.64, 0.016, 1.64)`, Trans `(8.0, 2.133, -5.0)`
+*   **Board Main Body**: Cube, Scale `(1.60, 0.034, 1.60)`, Trans `(8.0, 2.158, -5.0)`
+*   **Surface Texture**: 1024x1024 procedural tournament surface with 8x8 alternating curly maple and dark walnut squares, brass/gold inlay stringing lines, and polished rosewood border.
+*   **Playing Grid Dimensions**: 8x8 squares spanning $1.36\text{m} \times 1.36\text{m}$ (each square $0.170\text{m} \times 0.170\text{m}$), centered at `(8.0, 2.175, -5.0)`. Files a..h run along $X \in [7.405, 8.595]$, Ranks 1..8 run along $Z \in [-5.595, -4.405]$.
+
+**Dual-Timer Analog Chess Clock**
+*   **Clock Casing**: Cube, Scale `(0.15, 0.14, 0.28)`, Trans `(6.85, 2.195, -5.0)`
+*   **Clock Dials (x2)**: Cylinders, Scale `(0.076, 0.004, 0.076)`, Trans `(6.930, 2.195, -5.06)` and `(6.930, 2.195, -4.94)`, Rotation `(0.0, 0.0, 90.0)`
+*   **Dial Bezels (x2)**: Cylinders, Scale `(0.082, 0.005, 0.082)`, Trans `(6.927, 2.195, -5.06)` and `(6.927, 2.195, -4.94)`, Rotation `(0.0, 0.0, 90.0)`
+*   **Rocker Buttons (x2)**: Cylinders, Scale `(0.032, 0.016, 0.032)` at `(6.85, 2.273, -5.06)` and Scale `(0.032, 0.036, 0.032)` at `(6.85, 2.283, -4.94)`
+
+**Staunton Chess Pieces (Component Primitives)**
+*   **Pawn (Height 0.10m)**:
+    *   Base: Cylinder, Scale `(0.070, 0.016, 0.070)` at $+0.008$
+    *   Body: Cylinder, Scale `(0.046, 0.046, 0.046)` at $+0.038$
+    *   Collar: Cylinder, Scale `(0.050, 0.008, 0.050)` at $+0.063$
+    *   Head: Sphere, Scale `(0.036, 0.036, 0.036)` at $+0.080$
+*   **Rook (Height 0.12m)**:
+    *   Base: Cylinder, Scale `(0.080, 0.020, 0.080)` at $+0.010$
+    *   Shaft: Cylinder, Scale `(0.060, 0.070, 0.060)` at $+0.055$
+    *   Collar: Cylinder, Scale `(0.068, 0.012, 0.068)` at $+0.095$
+    *   Turret: Cylinder, Scale `(0.074, 0.022, 0.074)` at $+0.112$
+*   **Knight (Height 0.13m)**:
+    *   Base: Cylinder, Scale `(0.080, 0.020, 0.080)` at $+0.010$
+    *   Pedestal: Cylinder, Scale `(0.058, 0.030, 0.058)` at $+0.035$
+    *   Head: Cube, Scale `(0.046, 0.055, 0.065)` at $+0.075$
+    *   Ears / Mane: Cube, Scale `(0.035, 0.025, 0.040)` at $+0.105$
+*   **Bishop (Height 0.16m)**:
+    *   Base: Cylinder, Scale `(0.080, 0.020, 0.080)` at $+0.010$
+    *   Body: Cylinder, Scale `(0.052, 0.080, 0.052)` at $+0.060$
+    *   Collar: Cylinder, Scale `(0.058, 0.010, 0.058)` at $+0.105$
+    *   Miter Head: Sphere, Scale `(0.044, 0.052, 0.044)` at $+0.125$
+    *   Finial: Sphere, Scale `(0.016, 0.016, 0.016)` at $+0.155$
+*   **Queen (Height 0.17m)**:
+    *   Base: Cylinder, Scale `(0.086, 0.024, 0.086)` at $+0.012$
+    *   Body: Cylinder, Scale `(0.056, 0.095, 0.056)` at $+0.070$
+    *   Collar: Cylinder, Scale `(0.064, 0.012, 0.064)` at $+0.122$
+    *   Crown: Cylinder, Scale `(0.068, 0.024, 0.068)` at $+0.140$
+    *   Finial Orb: Sphere, Scale `(0.022, 0.022, 0.022)` at $+0.160$
+*   **King (Height 0.19m)**:
+    *   Base: Cylinder, Scale `(0.088, 0.024, 0.088)` at $+0.012$
+    *   Body: Cylinder, Scale `(0.060, 0.102, 0.060)` at $+0.075$
+    *   Collar: Cylinder, Scale `(0.066, 0.012, 0.066)` at $+0.130$
+    *   Crown: Cylinder, Scale `(0.070, 0.028, 0.070)` at $+0.150$
+    *   Finial Cross Vertical: Cube, Scale `(0.012, 0.024, 0.010)` at $+0.174$
+    *   Finial Cross Arm: Cube, Scale `(0.024, 0.008, 0.010)` at $+0.178$
+
+**Piece Placements (Italian Game Active Setup, Board Surface $Y_0 = 2.175$)**
+*   **White Pieces (South / Rank 1-4)**:
+    *   Rooks (x2): `(7.405, 2.175, -5.595)` [a1], `(8.255, 2.175, -5.595)` [f1]
+    *   Knights (x2): `(7.575, 2.175, -5.595)` [b1], `(8.255, 2.175, -5.255)` [f3]
+    *   Bishops (x2): `(7.745, 2.175, -5.595)` [c1], `(7.745, 2.175, -5.085)` [c4]
+    *   Queen: `(7.915, 2.175, -5.595)` [d1]
+    *   King: `(8.425, 2.175, -5.595)` [g1]
+    *   Pawns (x8): `(7.405, 2.175, -5.425)` [a2], `(7.575, 2.175, -5.425)` [b2], `(7.745, 2.175, -5.255)` [c3], `(7.915, 2.175, -5.255)` [d3], `(8.085, 2.175, -5.085)` [e4], `(8.255, 2.175, -5.425)` [f2], `(8.425, 2.175, -5.425)` [g2], `(8.595, 2.175, -5.425)` [h2]
+*   **Black Pieces (North / Rank 5-8)**:
+    *   Rooks (x2): `(7.405, 2.175, -4.405)` [a8], `(8.255, 2.175, -4.405)` [f8]
+    *   Knights (x2): `(7.745, 2.175, -4.745)` [c6], `(8.255, 2.175, -4.745)` [f6]
+    *   Bishops (x2): `(7.745, 2.175, -4.405)` [c8], `(7.745, 2.175, -4.915)` [c5]
+    *   Queen: `(7.915, 2.175, -4.405)` [d8]
+    *   King: `(8.425, 2.175, -4.405)` [g8]
+    *   Pawns (x8): `(7.405, 2.175, -4.575)` [a7], `(7.575, 2.175, -4.575)` [b7], `(7.745, 2.175, -4.575)` [c7], `(7.915, 2.175, -4.745)` [d6], `(8.085, 2.175, -4.915)` [e5], `(8.255, 2.175, -4.575)` [f7], `(8.425, 2.175, -4.575)` [g7], `(8.595, 2.175, -4.575)` [h7]
+
+### Functional Round Wall Clock (North / Back Wall)
+
+Mounted centrally on the Back / North Wall above the central window at $X = 0.0\text{m}, Y = 10.8\text{m}, Z = -15.0\text{m}$. Scaled to an architectural $2.50\text{m}$ diameter with high-contrast numerals and vivid hands so that it is clearly readable across the entire 28m hall from any camera position.
+
+*   **Outer Bezel / Casing**: Cylinder, Scale `(2.50, 0.18, 2.50)`, Translation `(0.0, 10.8, -14.90)`, Rotation `(90.0, 0.0, 0.0)`. Walnut wood grain texture with bronze sheen (`shininess: 32.0, specular: 0.35`).
+*   **Inner Stepped Bezel**: Cylinder, Scale `(2.36, 0.04, 2.36)`, Translation `(0.0, 10.8, -14.83)`, Rotation `(90.0, 0.0, 0.0)`. Polished warm brass (`shininess: 64.0, specular: 0.70`).
+*   **Clock Dial Face**: Cylinder, Scale `(2.24, 0.02, 2.24)`, Translation `(0.0, 10.8, -14.81)`, Rotation `(90.0, 0.0, 0.0)`. Front dial plane lies at $Z = -14.80\text{m}$.
+    *   **Dial Surface Texture**: 1024x1024 procedural antique porcelain dial featuring vector strokes for hour numerals 1 through 12, double outer railway track rings, 60-minute division tick marks, 12 bold hour batons, inner chapter ring ($r = 0.240$), and central brass accent ring ($r = 0.035$).
+*   **Real-Time Kinematics Engine**:
+    *   Queried from the system local wall-clock time at launch (`localtime_s` / `localtime_r`), advanced monotonically per-frame via high-resolution `glfwGetTime()`.
+    *   All three hands sweep continuously without jitter or occlusion.
+*   **Hour Hand (Black)**:
+    *   **Primitive**: Cube
+    *   **Dimensions**: Scale `(0.090, 0.72, 0.024)` (9cm wide, 0.58m forward reach, 0.14m counterbalance tail).
+    *   **Transformation**: Position `(0.0 + 0.22 * sin(radHour), 10.8 + 0.22 * cos(radHour), -14.784)`, Rotation `(0.0, 0.0, -degrees(radHour))`.
+*   **Minute Hand (Black)**:
+    *   **Primitive**: Cube
+    *   **Dimensions**: Scale `(0.068, 1.12, 0.024)` (6.8cm wide, 0.94m forward reach, 0.18m counterbalance tail).
+    *   **Transformation**: Position `(0.0 + 0.38 * sin(radMin), 10.8 + 0.38 * cos(radMin), -14.762)`, Rotation `(0.0, 0.0, -degrees(radMin))`.
+*   **Second Hand (Scarlet Red & Lollipop Signal Tip)**:
+    *   **Hand Shaft**: Cube, Scale `(0.028, 1.26, 0.018)` (2.8cm wide, 1.02m reach, 0.24m tail). Position `(0.0 + 0.39 * sin(radSec), 10.8 + 0.39 * cos(radSec), -14.742)`, Rotation `(0.0, 0.0, -degrees(radSec))`.
+    *   **Tail Counterweight Disc**: Cylinder, Scale `(0.13, 0.020, 0.13)` (diameter 0.13m), Position `(0.0 - 0.18 * sin(radSec), 10.8 - 0.18 * cos(radSec), -14.741)`, Rotation `(90.0, 0.0, 0.0)`.
+    *   **Tip Signal Lollipop Disc**: Cylinder, Scale `(0.12, 0.020, 0.12)` (diameter 0.12m), Position `(0.0 + 0.86 * sin(radSec), 10.8 + 0.86 * cos(radSec), -14.741)`, Rotation `(90.0, 0.0, 0.0)`.
+*   **Center Hub & Cap**:
+    *   **Base Hub Disc**: Cylinder, Scale `(0.16, 0.024, 0.16)`, Translation `(0.0, 10.8, -14.728)`, Rotation `(90.0, 0.0, 0.0)`. Brass material.
+    *   **Domed Center Cap**: Sphere, Scale `(0.10, 0.10, 0.10)`, Translation `(0.0, 10.8, -14.716)`. Brass material.
+
+

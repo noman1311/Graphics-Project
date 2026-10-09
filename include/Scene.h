@@ -25,6 +25,8 @@ public:
     Texture texCeilingMatte;
     Texture texTableTennis;
     Texture texCarromBoard;
+    Texture texChessBoard;
+    Texture texClockDial;
     Texture texSky;
     Texture texGrass;
     Texture texFabric;
@@ -54,8 +56,10 @@ private:
     // Subsections of the scene
     void DrawEnvironment(Shader& shader);
     void DrawDoor(Shader& shader);
+    void DrawWallClock(Shader& shader);
     void DrawCeilingLight(Shader& phongShader, Shader& lightShader);
     void DrawFurniture(Shader& shader);
+    void DrawChessGame(Shader& shader);
     void DrawGameSetups(Shader& shader, bool miniGameActive = false,
                         int activeCarromBoard = 0);
     void DrawWindow(Shader& shader);

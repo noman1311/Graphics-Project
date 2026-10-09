@@ -1,5 +1,9 @@
 #include "Scene.h"
 #include "ProceduralTextures.h"
+#include <GLFW/glfw3.h>
+#include <chrono>
+#include <ctime>
+#include <cmath>
 // ProceduralTextures::Xxx generators are defined in src/ProceduralTextures.cpp.
 
 Scene::Scene()
@@ -16,6 +20,8 @@ Scene::Scene()
     texCeilingMatte= ProceduralTextures::CeilingMatte(512, 512);
     texTableTennis = ProceduralTextures::TableTennisSurface(512, 512);
     texCarromBoard = ProceduralTextures::CarromBoardSurface(1024, 1024);
+    texChessBoard  = ProceduralTextures::ChessBoardSurface(1024, 1024);
+    texClockDial   = ProceduralTextures::ClockDial(1024, 1024);
     texSky         = ProceduralTextures::Sky(512, 512);
     texGrass       = ProceduralTextures::Grass(512, 512);
     texFabric      = ProceduralTextures::Fabric(256, 256);
@@ -185,6 +191,109 @@ void Scene::DrawDoor(Shader& shader)
     // Keyhole
     drawMesh(shader, cylinder, glm::vec3(doorX + 0.045f, 3.05f, doorZ + 0.95f),
         glm::vec3(0.03f, 0.02f, 0.03f), Material::Make(glm::vec3(0.12f), 16.0f, 0.1f), glm::vec3(0.0f, 0.0f, 90.0f));
+}
+
+void Scene::DrawWallClock(Shader& shader)
+{
+    // ============== Functional Round Wall Clock ==============
+    // Mounted on the Back / North Wall (Z = -15.0f), centered at X = 0.0, Y = 10.8 above the window
+    const float clockX = 0.0f;
+    const float clockY = 10.8f;
+    const float wallZ  = -15.0f;
+
+    // Outer circular case / bezel (brushed bronze / walnut)
+    auto casingMat = Material::Make(glm::vec3(0.18f, 0.14f, 0.11f), 32.0f, 0.35f,
+                                    glm::vec3(0.0f), texDarkWood.id, 1.0f);
+    drawMesh(shader, cylinder, glm::vec3(clockX, clockY, wallZ + 0.10f),
+        glm::vec3(2.50f, 0.18f, 2.50f), casingMat, glm::vec3(90.0f, 0.0f, 0.0f));
+
+    // Inner brass bezel stepped ring
+    auto brassMat = Material::Make(glm::vec3(0.85f, 0.72f, 0.35f), 64.0f, 0.70f);
+    drawMesh(shader, cylinder, glm::vec3(clockX, clockY, wallZ + 0.17f),
+        glm::vec3(2.36f, 0.04f, 2.36f), brassMat, glm::vec3(90.0f, 0.0f, 0.0f));
+
+    // Clock dial face (porcelain dial with numerals 1-12, 60-min railway track, 12 bold hour markers)
+    auto dialMat = Material::Make(glm::vec3(1.0f), 32.0f, 0.25f,
+                                  glm::vec3(0.0f), texClockDial.id, 1.0f);
+    drawMesh(shader, cylinder, glm::vec3(clockX, clockY, wallZ + 0.19f),
+        glm::vec3(2.24f, 0.02f, 2.24f), dialMat, glm::vec3(90.0f, 0.0f, 0.0f));
+
+    // Front surface of dial lies at Z = wallZ + 0.19f + 0.02f * 0.5f = wallZ + 0.20f (-14.80f)
+    const float dialZ = wallZ + 0.20f;
+
+    // ---- Functional Real-Time Running Clock Hands ----
+    // Synchronize to current local wall-clock time at startup, then advance with glfwGetTime()
+    static double s_baseSeconds = -1.0;
+    if (s_baseSeconds < 0.0) {
+        std::time_t rawtime = std::time(nullptr);
+        std::tm localTm;
+#if defined(_WIN32)
+        localtime_s(&localTm, &rawtime);
+#else
+        localtime_r(&rawtime, &localTm);
+#endif
+        s_baseSeconds = (double)(localTm.tm_hour % 12) * 3600.0 +
+                        (double)localTm.tm_min * 60.0 +
+                        (double)localTm.tm_sec;
+    }
+    double liveSeconds = s_baseSeconds + glfwGetTime();
+
+    // Modulo intervals
+    const float TWO_PI = 6.283185307f;
+    float radHour = (float)std::fmod((liveSeconds / 3600.0) * (TWO_PI / 12.0), TWO_PI);
+    float radMin  = (float)std::fmod((liveSeconds / 60.0)   * (TWO_PI / 60.0), TWO_PI);
+    float radSec  = (float)std::fmod(liveSeconds            * (TWO_PI / 60.0), TWO_PI);
+
+    auto handBlackMat = Material::Make(glm::vec3(0.06f, 0.06f, 0.07f), 64.0f, 0.40f);
+    auto handRedMat   = Material::Make(glm::vec3(0.96f, 0.10f, 0.10f), 64.0f, 0.55f);
+
+    // 1. Hour Hand (length: 0.72m, forward 0.58m, tail 0.14m, bold width 0.090m)
+    {
+        const float dCenter = (0.58f - 0.14f) * 0.5f; // 0.22m
+        float hx = clockX + dCenter * std::sin(radHour);
+        float hy = clockY + dCenter * std::cos(radHour);
+        float rotZ = -glm::degrees(radHour);
+        drawMesh(shader, cube, glm::vec3(hx, hy, dialZ + 0.016f),
+            glm::vec3(0.090f, 0.72f, 0.024f), handBlackMat, glm::vec3(0.0f, 0.0f, rotZ));
+    }
+
+    // 2. Minute Hand (length: 1.12m, forward 0.94m, tail 0.18m, bold width 0.068m)
+    {
+        const float dCenter = (0.94f - 0.18f) * 0.5f; // 0.38m
+        float mx = clockX + dCenter * std::sin(radMin);
+        float my = clockY + dCenter * std::cos(radMin);
+        float rotZ = -glm::degrees(radMin);
+        drawMesh(shader, cube, glm::vec3(mx, my, dialZ + 0.038f),
+            glm::vec3(0.068f, 1.12f, 0.024f), handBlackMat, glm::vec3(0.0f, 0.0f, rotZ));
+    }
+
+    // 3. Second Hand (length: 1.26m, forward 1.02m, tail 0.24m, scarlet red)
+    {
+        const float dCenter = (1.02f - 0.24f) * 0.5f; // 0.39m
+        float sx = clockX + dCenter * std::sin(radSec);
+        float sy = clockY + dCenter * std::cos(radSec);
+        float rotZ = -glm::degrees(radSec);
+        drawMesh(shader, cube, glm::vec3(sx, sy, dialZ + 0.058f),
+            glm::vec3(0.028f, 1.26f, 0.018f), handRedMat, glm::vec3(0.0f, 0.0f, rotZ));
+
+        // Counterbalance disc on the tail of the second hand
+        float tailX = clockX - 0.18f * std::sin(radSec);
+        float tailY = clockY - 0.18f * std::cos(radSec);
+        drawMesh(shader, cylinder, glm::vec3(tailX, tailY, dialZ + 0.059f),
+            glm::vec3(0.13f, 0.020f, 0.13f), handRedMat, glm::vec3(90.0f, 0.0f, 0.0f));
+
+        // Mondaine-style lollipop signal disc near the tip (r = 0.86m)
+        float tipDiscX = clockX + 0.86f * std::sin(radSec);
+        float tipDiscY = clockY + 0.86f * std::cos(radSec);
+        drawMesh(shader, cylinder, glm::vec3(tipDiscX, tipDiscY, dialZ + 0.059f),
+            glm::vec3(0.12f, 0.020f, 0.12f), handRedMat, glm::vec3(90.0f, 0.0f, 0.0f));
+    }
+
+    // Center brass hub & decorative domed cap
+    drawMesh(shader, cylinder, glm::vec3(clockX, clockY, dialZ + 0.072f),
+        glm::vec3(0.16f, 0.024f, 0.16f), brassMat, glm::vec3(90.0f, 0.0f, 0.0f));
+    drawMesh(shader, sphere, glm::vec3(clockX, clockY, dialZ + 0.084f),
+        glm::vec3(0.10f, 0.10f, 0.10f), brassMat);
 }
 
 void Scene::DrawCeilingLight(Shader& phongShader, Shader& lightShader)
@@ -475,6 +584,170 @@ void Scene::DrawFurniture(Shader& shader)
         glm::vec3(0.08f, 0.6f, 0.08f), handleMat, glm::vec3(90.0f, 0.0f, 0.0f));
     drawMesh(shader, cylinder, glm::vec3(10.2f, 4.0f, -11.85f),
         glm::vec3(0.08f, 0.6f, 0.08f), handleMat, glm::vec3(90.0f, 0.0f, 0.0f));
+
+    // Chess set on the dining/games table
+    DrawChessGame(shader);
+}
+
+void Scene::DrawChessGame(Shader& shader)
+{
+    // ============== Chess Board on Table ==============
+    // Table center is (8.0, 2.05, -5.0), top of tabletop is Y = 2.125
+    const float boardY = 2.125f;
+
+    // Plinth / bevel base molding
+    auto plinthMat = Material::Make(glm::vec3(0.28f, 0.14f, 0.08f), 24.0f, 0.25f,
+                                    glm::vec3(0.0f), texDarkWood.id, 1.0f);
+    drawMesh(shader, cube, glm::vec3(8.0f, boardY + 0.008f, -5.0f),
+        glm::vec3(1.64f, 0.016f, 1.64f), plinthMat);
+
+    // Chess board body with high-res procedural checkered surface
+    auto chessBoardMat = Material::Make(glm::vec3(1.0f), 32.0f, 0.35f,
+                                        glm::vec3(0.0f), texChessBoard.id, 1.0f);
+    drawMesh(shader, cube, glm::vec3(8.0f, boardY + 0.033f, -5.0f),
+        glm::vec3(1.60f, 0.034f, 1.60f), chessBoardMat);
+
+    // Playing surface top level
+    const float Y0 = boardY + 0.050f;
+
+    // Grid coordinates: 8x8 squares, grid width = 1.36m, each square = 0.170m
+    const float startX = 7.32f + 0.085f;  // File a center
+    const float startZ = -5.68f + 0.085f; // Rank 1 center (White side, toward south chair)
+    const float step = 0.170f;
+
+    auto getPos = [&](int file, int rank) -> glm::vec3 {
+        return glm::vec3(startX + (float)file * step, Y0, startZ + (float)rank * step);
+    };
+
+    // Piece materials
+    auto whitePieceMat = Material::Make(glm::vec3(0.96f, 0.93f, 0.84f), 64.0f, 0.50f);
+    auto blackPieceMat = Material::Make(glm::vec3(0.12f, 0.10f, 0.10f), 64.0f, 0.50f);
+
+    // Piece drawing lambdas
+    auto drawPawn = [&](int file, int rank, bool isWhite) {
+        glm::vec3 p = getPos(file, rank);
+        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.008f, p.z), glm::vec3(0.070f, 0.016f, 0.070f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.038f, p.z), glm::vec3(0.046f, 0.046f, 0.046f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.063f, p.z), glm::vec3(0.050f, 0.008f, 0.050f), mat);
+        drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.080f, p.z), glm::vec3(0.036f, 0.036f, 0.036f), mat);
+    };
+
+    auto drawRook = [&](int file, int rank, bool isWhite) {
+        glm::vec3 p = getPos(file, rank);
+        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.010f, p.z), glm::vec3(0.080f, 0.020f, 0.080f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.055f, p.z), glm::vec3(0.060f, 0.070f, 0.060f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.095f, p.z), glm::vec3(0.068f, 0.012f, 0.068f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.112f, p.z), glm::vec3(0.074f, 0.022f, 0.074f), mat);
+    };
+
+    auto drawKnight = [&](int file, int rank, bool isWhite) {
+        glm::vec3 p = getPos(file, rank);
+        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.010f, p.z), glm::vec3(0.080f, 0.020f, 0.080f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.035f, p.z), glm::vec3(0.058f, 0.030f, 0.058f), mat);
+        drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.075f, p.z), glm::vec3(0.046f, 0.055f, 0.065f), mat);
+        drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.105f, p.z), glm::vec3(0.035f, 0.025f, 0.040f), mat);
+    };
+
+    auto drawBishop = [&](int file, int rank, bool isWhite) {
+        glm::vec3 p = getPos(file, rank);
+        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.010f, p.z), glm::vec3(0.080f, 0.020f, 0.080f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.060f, p.z), glm::vec3(0.052f, 0.080f, 0.052f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.105f, p.z), glm::vec3(0.058f, 0.010f, 0.058f), mat);
+        drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.125f, p.z), glm::vec3(0.044f, 0.052f, 0.044f), mat);
+        drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.155f, p.z), glm::vec3(0.016f, 0.016f, 0.016f), mat);
+    };
+
+    auto drawQueen = [&](int file, int rank, bool isWhite) {
+        glm::vec3 p = getPos(file, rank);
+        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.012f, p.z), glm::vec3(0.086f, 0.024f, 0.086f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.070f, p.z), glm::vec3(0.056f, 0.095f, 0.056f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.122f, p.z), glm::vec3(0.064f, 0.012f, 0.064f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.140f, p.z), glm::vec3(0.068f, 0.024f, 0.068f), mat);
+        drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.160f, p.z), glm::vec3(0.022f, 0.022f, 0.022f), mat);
+    };
+
+    auto drawKing = [&](int file, int rank, bool isWhite) {
+        glm::vec3 p = getPos(file, rank);
+        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.012f, p.z), glm::vec3(0.088f, 0.024f, 0.088f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.075f, p.z), glm::vec3(0.060f, 0.102f, 0.060f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.130f, p.z), glm::vec3(0.066f, 0.012f, 0.066f), mat);
+        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.150f, p.z), glm::vec3(0.070f, 0.028f, 0.070f), mat);
+        drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.174f, p.z), glm::vec3(0.012f, 0.024f, 0.010f), mat);
+        drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.178f, p.z), glm::vec3(0.024f, 0.008f, 0.010f), mat);
+    };
+
+    // Classical Game Position (White South, Black North)
+    // White Pieces
+    drawRook  (0, 0, true); // a1
+    drawKnight(1, 0, true); // b1
+    drawBishop(2, 0, true); // c1
+    drawQueen (3, 0, true); // d1
+    drawRook  (5, 0, true); // f1 (castled)
+    drawKing  (6, 0, true); // g1 (castled)
+    drawBishop(2, 3, true); // c4 (active diagonal)
+    drawKnight(5, 2, true); // f3 (developed)
+
+    drawPawn  (0, 1, true); // a2
+    drawPawn  (1, 1, true); // b2
+    drawPawn  (2, 2, true); // c3
+    drawPawn  (3, 2, true); // d3
+    drawPawn  (4, 3, true); // e4
+    drawPawn  (5, 1, true); // f2
+    drawPawn  (6, 1, true); // g2
+    drawPawn  (7, 1, true); // h2
+
+    // Black Pieces
+    drawRook  (0, 7, false); // a8
+    drawBishop(2, 7, false); // c8
+    drawQueen (3, 7, false); // d8
+    drawRook  (5, 7, false); // f8 (castled)
+    drawKing  (6, 7, false); // g8 (castled)
+    drawKnight(2, 5, false); // c6 (developed)
+    drawBishop(2, 4, false); // c5 (active diagonal)
+    drawKnight(5, 5, false); // f6 (developed)
+
+    drawPawn  (0, 6, false); // a7
+    drawPawn  (1, 6, false); // b7
+    drawPawn  (2, 6, false); // c7
+    drawPawn  (3, 5, false); // d6
+    drawPawn  (4, 4, false); // e5
+    drawPawn  (5, 6, false); // f7
+    drawPawn  (6, 6, false); // g7
+    drawPawn  (7, 6, false); // h7
+
+    // ============== Dual-Timer Chess Clock ==============
+    // Situated next to the board on the table at X = 6.85, Z = -5.0
+    auto clockWood = Material::Make(glm::vec3(0.40f, 0.22f, 0.12f), 24.0f, 0.25f,
+                                   glm::vec3(0.0f), texDarkWood.id, 1.0f);
+    auto clockDial = Material::Make(glm::vec3(0.96f, 0.96f, 0.94f), 16.0f, 0.10f);
+    auto clockBrass = Material::Make(glm::vec3(0.85f, 0.72f, 0.35f), 64.0f, 0.60f);
+
+    // Clock body
+    drawMesh(shader, cube, glm::vec3(6.85f, boardY + 0.07f, -5.0f),
+        glm::vec3(0.15f, 0.14f, 0.28f), clockWood);
+
+    // Two dials facing toward +X (towards the chess board)
+    drawMesh(shader, cylinder, glm::vec3(6.927f, boardY + 0.07f, -5.06f),
+        glm::vec3(0.082f, 0.005f, 0.082f), clockBrass, glm::vec3(0.0f, 0.0f, 90.0f));
+    drawMesh(shader, cylinder, glm::vec3(6.930f, boardY + 0.07f, -5.06f),
+        glm::vec3(0.076f, 0.004f, 0.076f), clockDial, glm::vec3(0.0f, 0.0f, 90.0f));
+
+    drawMesh(shader, cylinder, glm::vec3(6.927f, boardY + 0.07f, -4.94f),
+        glm::vec3(0.082f, 0.005f, 0.082f), clockBrass, glm::vec3(0.0f, 0.0f, 90.0f));
+    drawMesh(shader, cylinder, glm::vec3(6.930f, boardY + 0.07f, -4.94f),
+        glm::vec3(0.076f, 0.004f, 0.076f), clockDial, glm::vec3(0.0f, 0.0f, 90.0f));
+
+    // Rocker push buttons on top (one depressed, one raised)
+    drawMesh(shader, cylinder, glm::vec3(6.85f, boardY + 0.148f, -5.06f),
+        glm::vec3(0.032f, 0.016f, 0.032f), clockBrass);
+    drawMesh(shader, cylinder, glm::vec3(6.85f, boardY + 0.158f, -4.94f),
+        glm::vec3(0.032f, 0.036f, 0.032f), clockBrass);
 }
 
 void Scene::DrawGameSetups(Shader& shader, bool miniGameActive, int activeCarromBoard)
@@ -676,6 +949,7 @@ void Scene::Draw(Shader& phongShader, Shader& lightShader,
     DrawExterior(phongShader);
     DrawEnvironment(phongShader);
     DrawDoor(phongShader);
+    DrawWallClock(phongShader);
     DrawWindow(phongShader);
     DrawFurniture(phongShader);
     DrawGameSetups(phongShader, miniGameActive, activeCarromBoard);

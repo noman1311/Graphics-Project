@@ -12,6 +12,8 @@ namespace ProceduralTextures
     Texture CeilingMatte(int w = 512, int h = 512);
     Texture TableTennisSurface(int w = 1024, int h = 1024);
     Texture CarromBoardSurface(int w = 1024, int h = 1024);
+    Texture ChessBoardSurface(int w = 1024, int h = 1024);
+    Texture ClockDial(int w = 1024, int h = 1024);
     Texture Sky(int w = 512, int h = 512);
     Texture Grass(int w = 512, int h = 512);
     Texture Fabric(int w = 256, int h = 256);

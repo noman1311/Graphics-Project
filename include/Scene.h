@@ -24,6 +24,7 @@ public:
     Texture texPlaster;
     Texture texCeilingMatte;
     Texture texTableTennis;
+    Texture texCarromBoard;
     Texture texSky;
     Texture texGrass;
     Texture texFabric;
@@ -37,7 +38,8 @@ public:
     Scene();
     void Draw(Shader& phongShader, Shader& lightShader,
               const glm::mat4& projection, const glm::mat4& view,
-              const glm::vec3& cameraPos);
+              const glm::vec3& cameraPos, bool miniGameActive = false,
+              int activeCarromBoard = 0);
 
 private:
     // Set material uniforms on a Phong shader.
@@ -54,7 +56,8 @@ private:
     void DrawDoor(Shader& shader);
     void DrawCeilingLight(Shader& phongShader, Shader& lightShader);
     void DrawFurniture(Shader& shader);
-    void DrawGameSetups(Shader& shader);
+    void DrawGameSetups(Shader& shader, bool miniGameActive = false,
+                        int activeCarromBoard = 0);
     void DrawWindow(Shader& shader);
     void DrawExterior(Shader& shader);
 };

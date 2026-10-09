@@ -15,6 +15,7 @@ Scene::Scene()
     texPlaster     = ProceduralTextures::Plaster(512, 512);
     texCeilingMatte= ProceduralTextures::CeilingMatte(512, 512);
     texTableTennis = ProceduralTextures::TableTennisSurface(512, 512);
+    texCarromBoard = ProceduralTextures::CarromBoardSurface(1024, 1024);
     texSky         = ProceduralTextures::Sky(512, 512);
     texGrass       = ProceduralTextures::Grass(512, 512);
     texFabric      = ProceduralTextures::Fabric(256, 256);
@@ -476,12 +477,12 @@ void Scene::DrawFurniture(Shader& shader)
         glm::vec3(0.08f, 0.6f, 0.08f), handleMat, glm::vec3(90.0f, 0.0f, 0.0f));
 }
 
-void Scene::DrawGameSetups(Shader& shader)
+void Scene::DrawGameSetups(Shader& shader, bool miniGameActive, int activeCarromBoard)
 {
     // ============== Carrom Board 1 (left, near south side) ==============
-    auto carromSurface = Material::Make(glm::vec3(0.92f, 0.78f, 0.50f),
-                                        32.0f, 0.30f,
-                                        glm::vec3(0.0f), texLightWood.id, 1.0f);
+    auto carromSurface = Material::Make(glm::vec3(1.0f),
+                                        32.0f, 0.25f,
+                                        glm::vec3(0.0f), texCarromBoard.id, 1.0f);
     auto carromFrame   = Material::Make(glm::vec3(0.55f, 0.30f, 0.15f),
                                         24.0f, 0.30f,
                                         glm::vec3(0.0f), texDarkWood.id, 1.0f);
@@ -518,25 +519,28 @@ void Scene::DrawGameSetups(Shader& shader)
     glm::vec3 coinScale(0.16f, 0.05f, 0.16f);
     glm::vec3 strikerScale(0.22f, 0.06f, 0.22f);
 
-    // Carrom Board 1 Pieces: Classic circular opening break formation
-    // Center: Red Queen
-    drawMesh(shader, cylinder, glm::vec3(-8.000f, 3.575f, 5.000f), coinScale, queenMat);
-    // Inner ring (radius 0.17m, 6 coins alternating white & black)
-    drawMesh(shader, cylinder, glm::vec3(-7.830f, 3.575f, 5.000f), coinScale, whiteCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(-7.915f, 3.575f, 5.147f), coinScale, blackCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(-8.085f, 3.575f, 5.147f), coinScale, whiteCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(-8.170f, 3.575f, 5.000f), coinScale, blackCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(-8.085f, 3.575f, 4.853f), coinScale, whiteCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(-7.915f, 3.575f, 4.853f), coinScale, blackCoinMat);
-    // Outer ring (radius 0.33m, 6 coins alternating black & white)
-    drawMesh(shader, cylinder, glm::vec3(-7.714f, 3.575f, 5.165f), coinScale, blackCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(-8.000f, 3.575f, 5.330f), coinScale, whiteCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(-8.286f, 3.575f, 5.165f), coinScale, blackCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(-8.286f, 3.575f, 4.835f), coinScale, whiteCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(-8.000f, 3.575f, 4.670f), coinScale, blackCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(-7.714f, 3.575f, 4.835f), coinScale, whiteCoinMat);
-    // Striker ready on baseline
-    drawMesh(shader, cylinder, glm::vec3(-8.000f, 3.580f, 6.000f), strikerScale, strikerMat);
+    // Carrom Board 1 Pieces: Classic circular opening break formation (only when not active gameplay)
+    if (activeCarromBoard != 1)
+    {
+        // Center: Red Queen
+        drawMesh(shader, cylinder, glm::vec3(-8.000f, 3.575f, 5.000f), coinScale, queenMat);
+        // Inner ring (radius 0.17m, 6 coins alternating white & black)
+        drawMesh(shader, cylinder, glm::vec3(-7.830f, 3.575f, 5.000f), coinScale, whiteCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(-7.915f, 3.575f, 5.147f), coinScale, blackCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(-8.085f, 3.575f, 5.147f), coinScale, whiteCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(-8.170f, 3.575f, 5.000f), coinScale, blackCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(-8.085f, 3.575f, 4.853f), coinScale, whiteCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(-7.915f, 3.575f, 4.853f), coinScale, blackCoinMat);
+        // Outer ring (radius 0.33m, 6 coins alternating black & white)
+        drawMesh(shader, cylinder, glm::vec3(-7.714f, 3.575f, 5.165f), coinScale, blackCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(-8.000f, 3.575f, 5.330f), coinScale, whiteCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(-8.286f, 3.575f, 5.165f), coinScale, blackCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(-8.286f, 3.575f, 4.835f), coinScale, whiteCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(-8.000f, 3.575f, 4.670f), coinScale, blackCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(-7.714f, 3.575f, 4.835f), coinScale, whiteCoinMat);
+        // Striker ready on baseline
+        drawMesh(shader, cylinder, glm::vec3(-8.000f, 3.580f, 6.000f), strikerScale, strikerMat);
+    }
 
     // ============== Carrom Board 2 (right, near south side) ==============
     drawMesh(shader, cube, glm::vec3(8.0f, 3.5f, 5.0f),
@@ -558,23 +562,26 @@ void Scene::DrawGameSetups(Shader& shader)
     drawMesh(shader, cube, glm::vec3(9.4f, 1.75f, 3.6f), glm::vec3(0.15f, 3.4f, 0.15f), carromLegMat);
     drawMesh(shader, cube, glm::vec3(9.4f, 1.75f, 6.4f), glm::vec3(0.15f, 3.4f, 0.15f), carromLegMat);
 
-    // Carrom Board 2 Pieces: Active mid-game scattered play
-    // Queen
-    drawMesh(shader, cylinder, glm::vec3(7.85f, 3.575f, 4.80f), coinScale, queenMat);
-    // White coins (in play)
-    drawMesh(shader, cylinder, glm::vec3(7.15f, 3.575f, 4.10f), coinScale, whiteCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(8.85f, 3.575f, 5.90f), coinScale, whiteCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(8.40f, 3.575f, 5.25f), coinScale, whiteCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(7.60f, 3.575f, 5.35f), coinScale, whiteCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(8.15f, 3.575f, 4.35f), coinScale, whiteCoinMat);
-    // Black coins (in play)
-    drawMesh(shader, cylinder, glm::vec3(8.85f, 3.575f, 4.15f), coinScale, blackCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(7.20f, 3.575f, 5.85f), coinScale, blackCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(7.95f, 3.575f, 4.50f), coinScale, blackCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(8.45f, 3.575f, 4.75f), coinScale, blackCoinMat);
-    drawMesh(shader, cylinder, glm::vec3(7.70f, 3.575f, 5.05f), coinScale, blackCoinMat);
-    // Striker angled for a pocket shot
-    drawMesh(shader, cylinder, glm::vec3(7.50f, 3.580f, 6.000f), strikerScale, strikerMat);
+    // Carrom Board 2 Pieces: Active mid-game scattered play (only when not active gameplay)
+    if (activeCarromBoard != 2)
+    {
+        // Queen
+        drawMesh(shader, cylinder, glm::vec3(7.85f, 3.575f, 4.80f), coinScale, queenMat);
+        // White coins (in play)
+        drawMesh(shader, cylinder, glm::vec3(7.15f, 3.575f, 4.10f), coinScale, whiteCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(8.85f, 3.575f, 5.90f), coinScale, whiteCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(8.40f, 3.575f, 5.25f), coinScale, whiteCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(7.60f, 3.575f, 5.35f), coinScale, whiteCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(8.15f, 3.575f, 4.35f), coinScale, whiteCoinMat);
+        // Black coins (in play)
+        drawMesh(shader, cylinder, glm::vec3(8.85f, 3.575f, 4.15f), coinScale, blackCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(7.20f, 3.575f, 5.85f), coinScale, blackCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(7.95f, 3.575f, 4.50f), coinScale, blackCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(8.45f, 3.575f, 4.75f), coinScale, blackCoinMat);
+        drawMesh(shader, cylinder, glm::vec3(7.70f, 3.575f, 5.05f), coinScale, blackCoinMat);
+        // Striker angled for a pocket shot
+        drawMesh(shader, cylinder, glm::vec3(7.50f, 3.580f, 6.000f), strikerScale, strikerMat);
+    }
 
     // ============== Table Tennis ==============
     // Tabletop with blue textured surface and white border
@@ -612,35 +619,39 @@ void Scene::DrawGameSetups(Shader& shader)
     drawMesh(shader, cube, glm::vec3( 3.8f, 1.5f, -2.3f), glm::vec3(0.2f, 2.9f, 0.2f), tableLegMat);
     drawMesh(shader, cube, glm::vec3(-3.8f, 1.5f, -2.3f), glm::vec3(0.2f, 2.9f, 0.2f), tableLegMat);
 
-    // Paddles and ball (resting on the table)
-    auto redPaddle  = Material::Make(glm::vec3(0.80f, 0.12f, 0.12f), 32.0f, 0.30f);
-    auto bluePaddle = Material::Make(glm::vec3(0.10f, 0.20f, 0.78f), 32.0f, 0.30f);
-    auto handleMat2 = Material::Make(glm::vec3(0.40f, 0.25f, 0.15f), 32.0f, 0.25f,
-                                     glm::vec3(0.0f), texLightWood.id, 2.0f);
+    // Paddles and ball (resting on the table, only drawn when mini-game is inactive)
+    if (!miniGameActive)
+    {
+        auto redPaddle  = Material::Make(glm::vec3(0.80f, 0.12f, 0.12f), 32.0f, 0.30f);
+        auto bluePaddle = Material::Make(glm::vec3(0.10f, 0.20f, 0.78f), 32.0f, 0.30f);
+        auto handleMat2 = Material::Make(glm::vec3(0.40f, 0.25f, 0.15f), 32.0f, 0.25f,
+                                         glm::vec3(0.0f), texLightWood.id, 2.0f);
 
-    // Red paddle (lying flat on top of the table at X = 2.0, tabletop surface is Y = 3.10)
-    drawMesh(shader, cylinder, glm::vec3(2.0f, 3.125f, 0.0f),
-        glm::vec3(0.40f, 0.04f, 0.40f), redPaddle, glm::vec3(0.0f, 0.0f, 0.0f));
-    // Red handle (grip attached to blade, resting on the table)
-    drawMesh(shader, cylinder, glm::vec3(2.0f, 3.125f, 0.31f),
-        glm::vec3(0.08f, 0.32f, 0.04f), handleMat2, glm::vec3(90.0f, 0.0f, 0.0f));
+        // Red paddle (lying flat on top of the table at X = 2.0, tabletop surface is Y = 3.10)
+        drawMesh(shader, cylinder, glm::vec3(2.0f, 3.125f, 0.0f),
+            glm::vec3(0.40f, 0.04f, 0.40f), redPaddle, glm::vec3(0.0f, 0.0f, 0.0f));
+        // Red handle (grip attached to blade, resting on the table)
+        drawMesh(shader, cylinder, glm::vec3(2.0f, 3.125f, 0.31f),
+            glm::vec3(0.08f, 0.32f, 0.04f), handleMat2, glm::vec3(90.0f, 0.0f, 0.0f));
 
-    // Blue paddle (lying flat on top of the table at X = -2.0)
-    drawMesh(shader, cylinder, glm::vec3(-2.0f, 3.125f, 0.0f),
-        glm::vec3(0.40f, 0.04f, 0.40f), bluePaddle, glm::vec3(0.0f, 0.0f, 0.0f));
-    // Blue handle (grip attached to blade, resting on the table)
-    drawMesh(shader, cylinder, glm::vec3(-2.0f, 3.125f, -0.31f),
-        glm::vec3(0.08f, 0.32f, 0.04f), handleMat2, glm::vec3(90.0f, 0.0f, 0.0f));
+        // Blue paddle (lying flat on top of the table at X = -2.0)
+        drawMesh(shader, cylinder, glm::vec3(-2.0f, 3.125f, 0.0f),
+            glm::vec3(0.40f, 0.04f, 0.40f), bluePaddle, glm::vec3(0.0f, 0.0f, 0.0f));
+        // Blue handle (grip attached to blade, resting on the table)
+        drawMesh(shader, cylinder, glm::vec3(-2.0f, 3.125f, -0.31f),
+            glm::vec3(0.08f, 0.32f, 0.04f), handleMat2, glm::vec3(90.0f, 0.0f, 0.0f));
 
-    // Ball (white sphere resting on the table)
-    drawMesh(shader, sphere, glm::vec3(0.5f, 3.155f, 0.5f),
-        glm::vec3(0.10f, 0.10f, 0.10f),
-        Material::Make(glm::vec3(1.0f, 0.98f, 0.92f), 64.0f, 0.60f));
+        // Ball (white sphere resting on the table)
+        drawMesh(shader, sphere, glm::vec3(0.5f, 3.155f, 0.5f),
+            glm::vec3(0.10f, 0.10f, 0.10f),
+            Material::Make(glm::vec3(1.0f, 0.98f, 0.92f), 64.0f, 0.60f));
+    }
 }
 
 void Scene::Draw(Shader& phongShader, Shader& lightShader,
                   const glm::mat4& projection, const glm::mat4& view,
-                  const glm::vec3& cameraPos)
+                  const glm::vec3& cameraPos, bool miniGameActive,
+                  int activeCarromBoard)
 {
     // ---- Pass 1: everything that uses the Phong shader ----
     phongShader.use();
@@ -667,6 +678,6 @@ void Scene::Draw(Shader& phongShader, Shader& lightShader,
     DrawDoor(phongShader);
     DrawWindow(phongShader);
     DrawFurniture(phongShader);
-    DrawGameSetups(phongShader);
+    DrawGameSetups(phongShader, miniGameActive, activeCarromBoard);
     DrawCeilingLight(phongShader, lightShader);
 }

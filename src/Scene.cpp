@@ -443,7 +443,7 @@ void Scene::DrawExterior(Shader& shader)
         Material::Make(glm::vec3(0.20f, 0.36f, 0.22f), 4.0f, 0.0f));
 }
 
-void Scene::DrawFurniture(Shader& shader)
+void Scene::DrawFurniture(Shader& shader, bool chessActive)
 {
     // ============== Table ==============
     // Tabletop (light wood)
@@ -586,10 +586,10 @@ void Scene::DrawFurniture(Shader& shader)
         glm::vec3(0.08f, 0.6f, 0.08f), handleMat, glm::vec3(90.0f, 0.0f, 0.0f));
 
     // Chess set on the dining/games table
-    DrawChessGame(shader);
+    DrawChessGame(shader, chessActive);
 }
 
-void Scene::DrawChessGame(Shader& shader)
+void Scene::DrawChessGame(Shader& shader, bool chessActive)
 {
     // ============== Chess Board on Table ==============
     // Table center is (8.0, 2.05, -5.0), top of tabletop is Y = 2.125
@@ -619,107 +619,111 @@ void Scene::DrawChessGame(Shader& shader)
         return glm::vec3(startX + (float)file * step, Y0, startZ + (float)rank * step);
     };
 
-    // Piece materials
-    auto whitePieceMat = Material::Make(glm::vec3(0.96f, 0.93f, 0.84f), 64.0f, 0.50f);
-    auto blackPieceMat = Material::Make(glm::vec3(0.12f, 0.10f, 0.10f), 64.0f, 0.50f);
+    // If interactive chess is not active, render static pieces on the board
+    if (!chessActive)
+    {
+        // Piece materials
+        auto whitePieceMat = Material::Make(glm::vec3(0.96f, 0.93f, 0.84f), 64.0f, 0.50f);
+        auto blackPieceMat = Material::Make(glm::vec3(0.12f, 0.10f, 0.10f), 64.0f, 0.50f);
 
-    // Piece drawing lambdas
-    auto drawPawn = [&](int file, int rank, bool isWhite) {
-        glm::vec3 p = getPos(file, rank);
-        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.008f, p.z), glm::vec3(0.070f, 0.016f, 0.070f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.038f, p.z), glm::vec3(0.046f, 0.046f, 0.046f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.063f, p.z), glm::vec3(0.050f, 0.008f, 0.050f), mat);
-        drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.080f, p.z), glm::vec3(0.036f, 0.036f, 0.036f), mat);
-    };
+        // Piece drawing lambdas
+        auto drawPawn = [&](int file, int rank, bool isWhite) {
+            glm::vec3 p = getPos(file, rank);
+            const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.008f, p.z), glm::vec3(0.070f, 0.016f, 0.070f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.038f, p.z), glm::vec3(0.046f, 0.046f, 0.046f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.063f, p.z), glm::vec3(0.050f, 0.008f, 0.050f), mat);
+            drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.080f, p.z), glm::vec3(0.036f, 0.036f, 0.036f), mat);
+        };
 
-    auto drawRook = [&](int file, int rank, bool isWhite) {
-        glm::vec3 p = getPos(file, rank);
-        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.010f, p.z), glm::vec3(0.080f, 0.020f, 0.080f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.055f, p.z), glm::vec3(0.060f, 0.070f, 0.060f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.095f, p.z), glm::vec3(0.068f, 0.012f, 0.068f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.112f, p.z), glm::vec3(0.074f, 0.022f, 0.074f), mat);
-    };
+        auto drawRook = [&](int file, int rank, bool isWhite) {
+            glm::vec3 p = getPos(file, rank);
+            const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.010f, p.z), glm::vec3(0.080f, 0.020f, 0.080f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.055f, p.z), glm::vec3(0.060f, 0.070f, 0.060f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.095f, p.z), glm::vec3(0.068f, 0.012f, 0.068f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.112f, p.z), glm::vec3(0.074f, 0.022f, 0.074f), mat);
+        };
 
-    auto drawKnight = [&](int file, int rank, bool isWhite) {
-        glm::vec3 p = getPos(file, rank);
-        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.010f, p.z), glm::vec3(0.080f, 0.020f, 0.080f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.035f, p.z), glm::vec3(0.058f, 0.030f, 0.058f), mat);
-        drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.075f, p.z), glm::vec3(0.046f, 0.055f, 0.065f), mat);
-        drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.105f, p.z), glm::vec3(0.035f, 0.025f, 0.040f), mat);
-    };
+        auto drawKnight = [&](int file, int rank, bool isWhite) {
+            glm::vec3 p = getPos(file, rank);
+            const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.010f, p.z), glm::vec3(0.080f, 0.020f, 0.080f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.035f, p.z), glm::vec3(0.058f, 0.030f, 0.058f), mat);
+            drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.075f, p.z), glm::vec3(0.046f, 0.055f, 0.065f), mat);
+            drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.105f, p.z), glm::vec3(0.035f, 0.025f, 0.040f), mat);
+        };
 
-    auto drawBishop = [&](int file, int rank, bool isWhite) {
-        glm::vec3 p = getPos(file, rank);
-        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.010f, p.z), glm::vec3(0.080f, 0.020f, 0.080f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.060f, p.z), glm::vec3(0.052f, 0.080f, 0.052f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.105f, p.z), glm::vec3(0.058f, 0.010f, 0.058f), mat);
-        drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.125f, p.z), glm::vec3(0.044f, 0.052f, 0.044f), mat);
-        drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.155f, p.z), glm::vec3(0.016f, 0.016f, 0.016f), mat);
-    };
+        auto drawBishop = [&](int file, int rank, bool isWhite) {
+            glm::vec3 p = getPos(file, rank);
+            const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.010f, p.z), glm::vec3(0.080f, 0.020f, 0.080f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.060f, p.z), glm::vec3(0.052f, 0.080f, 0.052f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.105f, p.z), glm::vec3(0.058f, 0.010f, 0.058f), mat);
+            drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.125f, p.z), glm::vec3(0.044f, 0.052f, 0.044f), mat);
+            drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.155f, p.z), glm::vec3(0.016f, 0.016f, 0.016f), mat);
+        };
 
-    auto drawQueen = [&](int file, int rank, bool isWhite) {
-        glm::vec3 p = getPos(file, rank);
-        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.012f, p.z), glm::vec3(0.086f, 0.024f, 0.086f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.070f, p.z), glm::vec3(0.056f, 0.095f, 0.056f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.122f, p.z), glm::vec3(0.064f, 0.012f, 0.064f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.140f, p.z), glm::vec3(0.068f, 0.024f, 0.068f), mat);
-        drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.160f, p.z), glm::vec3(0.022f, 0.022f, 0.022f), mat);
-    };
+        auto drawQueen = [&](int file, int rank, bool isWhite) {
+            glm::vec3 p = getPos(file, rank);
+            const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.012f, p.z), glm::vec3(0.086f, 0.024f, 0.086f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.070f, p.z), glm::vec3(0.056f, 0.095f, 0.056f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.122f, p.z), glm::vec3(0.064f, 0.012f, 0.064f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.140f, p.z), glm::vec3(0.068f, 0.024f, 0.068f), mat);
+            drawMesh(shader, sphere,   glm::vec3(p.x, p.y + 0.160f, p.z), glm::vec3(0.022f, 0.022f, 0.022f), mat);
+        };
 
-    auto drawKing = [&](int file, int rank, bool isWhite) {
-        glm::vec3 p = getPos(file, rank);
-        const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.012f, p.z), glm::vec3(0.088f, 0.024f, 0.088f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.075f, p.z), glm::vec3(0.060f, 0.102f, 0.060f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.130f, p.z), glm::vec3(0.066f, 0.012f, 0.066f), mat);
-        drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.150f, p.z), glm::vec3(0.070f, 0.028f, 0.070f), mat);
-        drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.174f, p.z), glm::vec3(0.012f, 0.024f, 0.010f), mat);
-        drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.178f, p.z), glm::vec3(0.024f, 0.008f, 0.010f), mat);
-    };
+        auto drawKing = [&](int file, int rank, bool isWhite) {
+            glm::vec3 p = getPos(file, rank);
+            const auto& mat = isWhite ? whitePieceMat : blackPieceMat;
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.012f, p.z), glm::vec3(0.088f, 0.024f, 0.088f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.075f, p.z), glm::vec3(0.060f, 0.102f, 0.060f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.130f, p.z), glm::vec3(0.066f, 0.012f, 0.066f), mat);
+            drawMesh(shader, cylinder, glm::vec3(p.x, p.y + 0.150f, p.z), glm::vec3(0.070f, 0.028f, 0.070f), mat);
+            drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.174f, p.z), glm::vec3(0.012f, 0.024f, 0.010f), mat);
+            drawMesh(shader, cube,     glm::vec3(p.x, p.y + 0.178f, p.z), glm::vec3(0.024f, 0.008f, 0.010f), mat);
+        };
 
-    // Classical Game Position (White South, Black North)
-    // White Pieces
-    drawRook  (0, 0, true); // a1
-    drawKnight(1, 0, true); // b1
-    drawBishop(2, 0, true); // c1
-    drawQueen (3, 0, true); // d1
-    drawRook  (5, 0, true); // f1 (castled)
-    drawKing  (6, 0, true); // g1 (castled)
-    drawBishop(2, 3, true); // c4 (active diagonal)
-    drawKnight(5, 2, true); // f3 (developed)
+        // Classical Game Position (White South, Black North)
+        // White Pieces
+        drawRook  (0, 0, true); // a1
+        drawKnight(1, 0, true); // b1
+        drawBishop(2, 0, true); // c1
+        drawQueen (3, 0, true); // d1
+        drawRook  (5, 0, true); // f1 (castled)
+        drawKing  (6, 0, true); // g1 (castled)
+        drawBishop(2, 3, true); // c4 (active diagonal)
+        drawKnight(5, 2, true); // f3 (developed)
 
-    drawPawn  (0, 1, true); // a2
-    drawPawn  (1, 1, true); // b2
-    drawPawn  (2, 2, true); // c3
-    drawPawn  (3, 2, true); // d3
-    drawPawn  (4, 3, true); // e4
-    drawPawn  (5, 1, true); // f2
-    drawPawn  (6, 1, true); // g2
-    drawPawn  (7, 1, true); // h2
+        drawPawn  (0, 1, true); // a2
+        drawPawn  (1, 1, true); // b2
+        drawPawn  (2, 2, true); // c3
+        drawPawn  (3, 2, true); // d3
+        drawPawn  (4, 3, true); // e4
+        drawPawn  (5, 1, true); // f2
+        drawPawn  (6, 1, true); // g2
+        drawPawn  (7, 1, true); // h2
 
-    // Black Pieces
-    drawRook  (0, 7, false); // a8
-    drawBishop(2, 7, false); // c8
-    drawQueen (3, 7, false); // d8
-    drawRook  (5, 7, false); // f8 (castled)
-    drawKing  (6, 7, false); // g8 (castled)
-    drawKnight(2, 5, false); // c6 (developed)
-    drawBishop(2, 4, false); // c5 (active diagonal)
-    drawKnight(5, 5, false); // f6 (developed)
+        // Black Pieces
+        drawRook  (0, 7, false); // a8
+        drawBishop(2, 7, false); // c8
+        drawQueen (3, 7, false); // d8
+        drawRook  (5, 7, false); // f8 (castled)
+        drawKing  (6, 7, false); // g8 (castled)
+        drawKnight(2, 5, false); // c6 (developed)
+        drawBishop(2, 4, false); // c5 (active diagonal)
+        drawKnight(5, 5, false); // f6 (developed)
 
-    drawPawn  (0, 6, false); // a7
-    drawPawn  (1, 6, false); // b7
-    drawPawn  (2, 6, false); // c7
-    drawPawn  (3, 5, false); // d6
-    drawPawn  (4, 4, false); // e5
-    drawPawn  (5, 6, false); // f7
-    drawPawn  (6, 6, false); // g7
-    drawPawn  (7, 6, false); // h7
+        drawPawn  (0, 6, false); // a7
+        drawPawn  (1, 6, false); // b7
+        drawPawn  (2, 6, false); // c7
+        drawPawn  (3, 5, false); // d6
+        drawPawn  (4, 4, false); // e5
+        drawPawn  (5, 6, false); // f7
+        drawPawn  (6, 6, false); // g7
+        drawPawn  (7, 6, false); // h7
+    }
 
     // ============== Dual-Timer Chess Clock ==============
     // Situated next to the board on the table at X = 6.85, Z = -5.0
@@ -924,7 +928,7 @@ void Scene::DrawGameSetups(Shader& shader, bool miniGameActive, int activeCarrom
 void Scene::Draw(Shader& phongShader, Shader& lightShader,
                   const glm::mat4& projection, const glm::mat4& view,
                   const glm::vec3& cameraPos, bool miniGameActive,
-                  int activeCarromBoard)
+                  int activeCarromBoard, bool chessActive)
 {
     // ---- Pass 1: everything that uses the Phong shader ----
     phongShader.use();
@@ -951,7 +955,7 @@ void Scene::Draw(Shader& phongShader, Shader& lightShader,
     DrawDoor(phongShader);
     DrawWallClock(phongShader);
     DrawWindow(phongShader);
-    DrawFurniture(phongShader);
+    DrawFurniture(phongShader, chessActive);
     DrawGameSetups(phongShader, miniGameActive, activeCarromBoard);
     DrawCeilingLight(phongShader, lightShader);
 }

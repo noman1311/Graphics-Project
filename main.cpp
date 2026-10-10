@@ -10,6 +10,7 @@
 #include "Scene.h"
 #include "TableTennisGame.h"
 #include "CarromGame.h"
+#include "ChessGame.h"
 #include "HudRenderer.h"
 
 #include <iostream>
@@ -38,6 +39,7 @@ float lastFrame = 0.0f;
 
 TableTennisGame game;
 CarromGame carromGame;
+ChessGame chessGame;
 HudRenderer hud;
 
 // Debouncing flags for discrete actions
@@ -45,6 +47,7 @@ bool key1PressedLast = false;
 bool keySpacePressedLast = false;
 bool keyEscPressedLast = false;
 bool keyEPressedLast = false;
+bool keyRPressedLast = false;
 
 int main()
 {
@@ -107,6 +110,10 @@ int main()
         {
             carromGame.Update(deltaTime);
         }
+        else if (chessGame.IsActive())
+        {
+            chessGame.Update(deltaTime);
+        }
 
         glClearColor(0.05f, 0.05f, 0.07f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -116,6 +123,7 @@ int main()
 
         bool ttActive = (game.GetState() != GameState::EXPLORATION);
         bool carromActive = carromGame.IsActive();
+        bool chessActive = chessGame.IsActive();
 
         glm::mat4 view;
         glm::vec3 camPos;
@@ -137,6 +145,17 @@ int main()
             glfwGetCursorPos(window, &mx, &my);
             carromGame.HandleMouseMove(mx, my, scrWidth, scrHeight, view, projection);
         }
+        else if (chessActive)
+        {
+            // Angled perspective gameplay camera looking over White's side of board
+            view = chessGame.GetGameplayViewMatrix();
+            camPos = chessGame.GetGameplayCameraPos();
+
+            // Continuous mouse hover update while in chess
+            double mx, my;
+            glfwGetCursorPos(window, &mx, &my);
+            chessGame.HandleMouseMove(mx, my, scrWidth, scrHeight, view, projection);
+        }
         else
         {
             // Free exploration first-person camera
@@ -145,9 +164,9 @@ int main()
         }
 
         // Draw static environment and room
-        // Passes ttActive and activeCarromBoard so active boards don't draw duplicate static pieces
+        // Passes ttActive, activeCarromBoard, and chessActive so active mini-games don't draw duplicate static pieces
         int activeCarromId = carromActive ? carromGame.GetActiveBoardId() : 0;
-        scene.Draw(phongShader, lightShader, projection, view, camPos, ttActive, activeCarromId);
+        scene.Draw(phongShader, lightShader, projection, view, camPos, ttActive, activeCarromId, chessActive);
 
         // Draw dynamic gameplay objects
         if (ttActive)
@@ -160,20 +179,37 @@ int main()
             carromGame.DrawDynamic(phongShader, lightShader, scene.cylinder);
             carromGame.DrawHUD(hud, scrWidth, scrHeight);
         }
+        else if (chessActive)
+        {
+            chessGame.DrawDynamic(phongShader, lightShader, scene.cube, scene.cylinder, scene.sphere);
+            chessGame.DrawHUD(hud, scrWidth, scrHeight);
+        }
         else
         {
             // Exploration mode: Proximity prompt for closest available game setup
             glm::vec3 c1(-8.0f, 3.5f, 5.0f);
             glm::vec3 c2( 8.0f, 3.5f, 5.0f);
+            glm::vec3 chessPos(8.0f, 2.05f, -5.0f);
+
             bool nearTT = game.IsNearTable(camera.Position);
             bool nearC1 = CarromGame::IsNearBoard(camera.Position, c1);
             bool nearC2 = CarromGame::IsNearBoard(camera.Position, c2);
+            bool nearChess = ChessGame::IsNearTable(camera.Position);
 
             float distTT = glm::length(glm::vec2(camera.Position.x - 5.5f, camera.Position.z - 0.0f));
             float distC1 = glm::length(glm::vec2(camera.Position.x - c1.x, camera.Position.z - (c1.z + 1.8f)));
             float distC2 = glm::length(glm::vec2(camera.Position.x - c2.x, camera.Position.z - (c2.z + 1.8f)));
+            float distChess = glm::length(glm::vec2(camera.Position.x - chessPos.x, camera.Position.z - (chessPos.z - 1.5f)));
 
-            if (nearC1 && (!nearC2 || distC1 <= distC2) && (!nearTT || distC1 <= distTT))
+            if (nearChess && (!nearTT || distChess <= distTT) && (!nearC1 || distChess <= distC1) && (!nearC2 || distChess <= distC2))
+            {
+                hud.BeginFrame();
+                hud.RenderTextCentered("CHESS GAME", 200.0f, 3.0f, glm::vec3(1.0f, 0.95f, 0.7f));
+                hud.RenderTextCentered("Press 1 to Play (White vs AI)", 250.0f, 2.0f, glm::vec3(0.8f, 0.9f, 1.0f));
+                hud.RenderTextCentered("Move closer or away to interact", 290.0f, 1.5f, glm::vec3(0.7f, 0.75f, 0.85f));
+                hud.EndFrame();
+            }
+            else if (nearC1 && (!nearC2 || distC1 <= distC2) && (!nearTT || distC1 <= distTT))
             {
                 hud.BeginFrame();
                 hud.RenderTextCentered("CARROM (Board 1)", 200.0f, 3.0f, glm::vec3(1.0f, 0.95f, 0.7f));
@@ -207,8 +243,9 @@ void processInput(GLFWwindow *window)
 {
     bool ttActive = (game.GetState() != GameState::EXPLORATION);
     bool carromActive = carromGame.IsActive();
+    bool chessActive = chessGame.IsActive();
 
-    if (!ttActive && !carromActive)
+    if (!ttActive && !carromActive && !chessActive)
     {
         // ================= ROOM EXPLORATION =================
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -223,15 +260,28 @@ void processInput(GLFWwindow *window)
         {
             glm::vec3 c1(-8.0f, 3.5f, 5.0f);
             glm::vec3 c2( 8.0f, 3.5f, 5.0f);
+            glm::vec3 chessPos(8.0f, 2.05f, -5.0f);
+
             bool nearTT = game.IsNearTable(camera.Position);
             bool nearC1 = CarromGame::IsNearBoard(camera.Position, c1);
             bool nearC2 = CarromGame::IsNearBoard(camera.Position, c2);
+            bool nearChess = ChessGame::IsNearTable(camera.Position);
 
             float distTT = glm::length(glm::vec2(camera.Position.x - 5.5f, camera.Position.z - 0.0f));
             float distC1 = glm::length(glm::vec2(camera.Position.x - c1.x, camera.Position.z - (c1.z + 1.8f)));
             float distC2 = glm::length(glm::vec2(camera.Position.x - c2.x, camera.Position.z - (c2.z + 1.8f)));
+            float distChess = glm::length(glm::vec2(camera.Position.x - chessPos.x, camera.Position.z - (chessPos.z - 1.5f)));
 
-            if (nearC1 && (!nearC2 || distC1 <= distC2) && (!nearTT || distC1 <= distTT))
+            if (nearChess && (!nearTT || distChess <= distTT) && (!nearC1 || distChess <= distC1) && (!nearC2 || distChess <= distC2))
+            {
+                // Enter Chess Game
+                savedCamPos = camera.Position;
+                savedYaw = camera.Yaw;
+                savedPitch = camera.Pitch;
+                chessGame.Start();
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            }
+            else if (nearC1 && (!nearC2 || distC1 <= distC2) && (!nearTT || distC1 <= distTT))
             {
                 // Enter Carrom Board 1
                 savedCamPos = camera.Position;
@@ -264,6 +314,7 @@ void processInput(GLFWwindow *window)
         keyEscPressedLast = false;
         keyEPressedLast = false;
         keySpacePressedLast = false;
+        keyRPressedLast = false;
 
         // Exploration WASD movement
         float cameraSpeed = static_cast<float>(8.0f * deltaTime);
@@ -275,6 +326,35 @@ void processInput(GLFWwindow *window)
             camera.Position -= glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             camera.Position += glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
+    }
+    else if (chessActive)
+    {
+        // ================= CHESS GAMEPLAY =================
+        bool escDown = (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS);
+        bool eDown   = (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS);
+
+        if ((escDown && !keyEscPressedLast) || (eDown && !keyEPressedLast))
+        {
+            chessGame.Stop();
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            camera.Position = savedCamPos;
+            camera.Yaw = savedYaw;
+            camera.Pitch = savedPitch;
+            camera.updateCameraVectors();
+            firstMouse = true;
+        }
+        keyEscPressedLast = escDown;
+        keyEPressedLast   = eDown;
+
+        // R: Restart game
+        bool rDown = (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS);
+        if (rDown && !keyRPressedLast)
+        {
+            chessGame.ResetGame();
+        }
+        keyRPressedLast = rDown;
+
+        key1PressedLast = false;
     }
     else if (carromActive)
     {
@@ -344,7 +424,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
     // Ignore mouse-look rotation during mini-games
-    if (carromGame.IsActive() || game.GetState() != GameState::EXPLORATION)
+    if (carromGame.IsActive() || chessGame.IsActive() || game.GetState() != GameState::EXPLORATION)
         return;
 
     float xpos = static_cast<float>(xposIn);
@@ -381,6 +461,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     if (carromGame.IsActive())
     {
         carromGame.HandleMouseButton(button, action);
+    }
+    else if (chessGame.IsActive())
+    {
+        chessGame.HandleMouseButton(button, action);
     }
 }
 

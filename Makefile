@@ -1,7 +1,7 @@
 CXX = D:/Mingw_compiler/ucrt64/bin/g++.exe
 CXXFLAGS = -Iinclude -O2 -g -fdiagnostics-color=always
 LDFLAGS = -Llib -lglfw3 -lopengl32 -lgdi32
-SRCS = main.cpp src/glad.c src/Scene.cpp src/Texture.cpp src/ProceduralTextures.cpp src/HudRenderer.cpp src/TableTennisGame.cpp src/CarromGame.cpp
+SRCS = main.cpp src/glad.c src/Scene.cpp src/Texture.cpp src/ProceduralTextures.cpp src/HudRenderer.cpp src/TableTennisGame.cpp src/CarromGame.cpp src/ChessGame.cpp
 TARGET = my_opengl_app.exe
 
 all: $(TARGET)

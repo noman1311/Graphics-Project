@@ -223,7 +223,7 @@ Mounted centrally on the Back/North wall directly above the window at `(0.0, 10.
     *   Finial Cross Vertical: Cube, Scale `(0.012, 0.024, 0.010)` at $+0.174$
     *   Finial Cross Arm: Cube, Scale `(0.024, 0.008, 0.010)` at $+0.178$
 
-**Piece Placements (Italian Game Active Setup, Board Surface $Y_0 = 2.175$)**
+**Piece Placements (Exploration Display Setup, Board Surface $Y_0 = 2.175$)**
 *   **White Pieces (South / Rank 1-4)**:
     *   Rooks (x2): `(7.405, 2.175, -5.595)` [a1], `(8.255, 2.175, -5.595)` [f1]
     *   Knights (x2): `(7.575, 2.175, -5.595)` [b1], `(8.255, 2.175, -5.255)` [f3]
@@ -238,6 +238,25 @@ Mounted centrally on the Back/North wall directly above the window at `(0.0, 10.
     *   Queen: `(7.915, 2.175, -4.405)` [d8]
     *   King: `(8.425, 2.175, -4.405)` [g8]
     *   Pawns (x8): `(7.405, 2.175, -4.575)` [a7], `(7.575, 2.175, -4.575)` [b7], `(7.745, 2.175, -4.575)` [c7], `(7.915, 2.175, -4.745)` [d6], `(8.085, 2.175, -4.915)` [e5], `(8.255, 2.175, -4.575)` [f7], `(8.425, 2.175, -4.575)` [g7], `(8.595, 2.175, -4.575)` [h7]
+
+**Playable Chess Mini-Game (Player vs AI)**
+*   **Interaction Trigger**: In Room Exploration mode, approaching the games table (within $3.2\text{m}$) activates the HUD prompt (`CHESS GAME: Press 1 to Play`).
+*   **Sides**: User plays as **White** (South, Rank 1); opponent is a **Simple AI** playing as **Black** (North, Rank 8).
+*   **Gameplay Camera**: Eye position `(8.00, 3.42, -6.65)`, target `(8.00, 2.175, -5.00)`, downward angle $35^\circ$ overlooking the board from the player's chair. Mouse cursor is unlocked into OS pointer mode.
+*   **AI Engine**: Minimax search with Alpha-Beta pruning (2-ply depth), material valuation (P:100, N:320, B:330, R:500, Q:900, K:20000), PeSTO Piece-Square Tables for positional development and center control, and natural thinking delay ($0.50\text{s}$).
+*   **Dynamic Visual Elements**:
+    *   *Hover Square*: Translucent light-blue outline pad `(0.162, 0.002, 0.162)`.
+    *   *Selected Square*: Glowing golden pad `(0.162, 0.003, 0.162)` at $+0.003\text{m}$ above board.
+    *   *Legal Move Targets*: Emerald green cylindrical dots `(0.065, 0.004, 0.065)` for open squares; crimson capture pads `(0.145, 0.004, 0.145)` for enemy piece captures.
+    *   *Last Move Markers*: Warm amber pads at both origin and destination squares.
+    *   *Check Indicator*: Vivid red glowing pad beneath checked King.
+    *   *Smooth Move Animation*: In-flight piece arced trajectory ($Y(t) = 2.175 + \sin(\pi t) \times 0.09\text{m}$) with smoothstep ease across $0.28\text{s}$.
+    *   *Captured Pieces Display*: Physically lined up in 3D along table flanks (White captures on East flank $X \approx 8.95..9.13$, Black captures on West flank $X \approx 6.87..7.05$).
+*   **Controls**:
+    *   `Left Click`: Select piece / Move to legal square.
+    *   `Right Click`: Deselect piece.
+    *   `R`: Restart new game.
+    *   `E` / `Escape`: Exit mini-game back to Room Exploration.
 
 ### Functional Round Wall Clock (North / Back Wall)
 

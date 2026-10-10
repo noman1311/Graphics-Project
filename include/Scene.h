@@ -41,7 +41,7 @@ public:
     void Draw(Shader& phongShader, Shader& lightShader,
               const glm::mat4& projection, const glm::mat4& view,
               const glm::vec3& cameraPos, bool miniGameActive = false,
-              int activeCarromBoard = 0);
+              int activeCarromBoard = 0, bool chessActive = false);
 
 private:
     // Set material uniforms on a Phong shader.
@@ -58,8 +58,8 @@ private:
     void DrawDoor(Shader& shader);
     void DrawWallClock(Shader& shader);
     void DrawCeilingLight(Shader& phongShader, Shader& lightShader);
-    void DrawFurniture(Shader& shader);
-    void DrawChessGame(Shader& shader);
+    void DrawFurniture(Shader& shader, bool chessActive = false);
+    void DrawChessGame(Shader& shader, bool chessActive = false);
     void DrawGameSetups(Shader& shader, bool miniGameActive = false,
                         int activeCarromBoard = 0);
     void DrawWindow(Shader& shader);

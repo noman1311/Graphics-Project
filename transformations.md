@@ -49,18 +49,27 @@ All transformations are given as vectors in the format `(x, y, z)`.
 *   **Brass Backplate**: Cube, Scale `(0.02, 0.55, 0.12)`, Trans `(-14.902, 3.20, -2.05)`
 *   **Brass Lever Handle**: Cylinders, Stem Scale `(0.04, 0.09, 0.04)` at `(-14.86, 3.30, -2.05)` Rot `(0, 0, 90)`; Grip Scale `(0.035, 0.24, 0.035)` at `(-14.81, 3.30, -2.15)` Rot `(90, 0, 0)`
 
-### Wall Clock (Back / North Wall)
-Mounted centrally on the Back/North wall directly above the window at `(0.0, 10.5, -14.88)`.
-*   **Outer Case / Bezel**: Cylinder, Scale `(1.86, 0.12, 1.86)`, Trans `(0.0, 10.5, -14.92)`, Rotation `(90.0, 0.0, 0.0)`
-*   **Inner Stepped Brass Trim**: Cylinder, Scale `(1.72, 0.03, 1.72)`, Trans `(0.0, 10.5, -14.865)`, Rotation `(90.0, 0.0, 0.0)`
-*   **Clock Dial**: Cylinder, Scale `(1.64, 0.015, 1.64)`, Trans `(0.0, 10.5, -14.850)`, Rotation `(90.0, 0.0, 0.0)`
-*   **Procedural Dial Texture**: 1024x1024 high-resolution enamel railway dial featuring 60-minute tick track, 12 bold hour indices with cardinal emphasis (12, 3, 6, 9), 12 brass-accented pips, inner chapter ring, and brass center ring.
-*   **Hour Hand**: Cube, Scale `(0.052, 0.54, 0.010)`, dynamically rotated around Z by $-30^\circ \times (\text{hour} + \text{min}/60)$ reflecting live local time.
-*   **Minute Hand**: Cube, Scale `(0.036, 0.78, 0.008)`, dynamically rotated around Z by $-6^\circ \times (\text{min} + \text{sec}/60)$ reflecting live local time.
-*   **Second Hand**: Cube, Scale `(0.014, 0.88, 0.006)` in vivid crimson red, dynamically rotated around Z by $-6^\circ \times \text{sec}$ with smooth sub-second sweep.
-*   **Counterbalance Disc**: Cylinder, Scale `(0.045, 0.008, 0.045)`, Trans `(tailX, tailY, -14.807)`, Rotation `(90.0, 0.0, 0.0)`
-*   **Center Hub & Cap**: Cylinder, Scale `(0.075, 0.016, 0.075)`, Trans `(0.0, 10.5, -14.800)`, Rotation `(90.0, 0.0, 0.0)` with dome Sphere `(0.038, 0.038, 0.038)` at `(0.0, 10.5, -14.790)`
-*   **Protective Glass Lens**: Cylinder, Scale `(1.68, 0.008, 1.68)`, Trans `(0.0, 10.5, -14.782)`, Rotation `(90.0, 0.0, 0.0)`
+## Lighting Setup (Balanced Indoor Illumination)
+
+The room features a carefully calibrated, high-efficiency lighting model designed for a large $30\text{m} \times 30\text{m} \times 15\text{m}$ athletic sports hall. It increases overall brightness and visibility across all corners and gaming setups while strictly protecting against overexposure, highlight burnout, and flat contrast.
+
+*   **Primary Point Light Source (Central High-Bay Luminaire)**:
+    *   **Position**: `(0.0, 14.55, -2.0)` situated just below the ceiling directly above the table tennis table.
+    *   **Light Color**: `(1.00, 0.96, 0.88)` (clean, high-CRI daylight-balanced warm white ~3800K).
+    *   **Attenuation Model**:
+        $$Attenuation = \frac{1.0}{1.0 + 0.022 \cdot d + 0.0020 \cdot d^2}$$
+        Provides smooth, physically plausible falloff: $0.64$ at table level ($12\text{m}$), $0.56$ at floor level ($15\text{m}$), and maintaining a clean $0.44$ across the far walls and corners ($20\text{m}-26\text{m}$).
+*   **Dual-Hemisphere Ambient Fill (Phong Fragment Shader)**:
+    *   **Sky Ambient Term**: `vec3(0.40, 0.42, 0.45) * lightColor` (simulates diffuse light bouncing off ceiling and entering from north window).
+    *   **Ground Ambient Term**: `vec3(0.35, 0.32, 0.28) * lightColor` (simulates warm bounce light reflecting from the maple hardwood floor).
+    *   **Normal Blend**: Modulated per-fragment by $\text{clamp}(N_y \cdot 0.5 + 0.5, 0.0, 1.0)$ to provide natural 3D curvature and depth even in indirect lighting.
+*   **Highlight Protection & Color Clamping**:
+    *   Shader clamps final composite colors `clamp(ambient + diffuse + specular + emission, 0.0, 1.0)` to preserve natural contrast and avoid washed-out clipping.
+*   **Ceiling Fixture Components**:
+    *   **Mounting Base**: Cylinder, Scale `(0.60, 0.05, 0.60)`, Translation `(0.0, 14.95, -2.0)`. Dark steel finish.
+    *   **Lamp Housing**: Cylinder, Scale `(0.18, 0.20, 0.18)`, Translation `(0.0, 14.80, -2.0)`. Brushed aluminum.
+    *   **Diffuser Bulb**: Sphere, Scale `(0.64, 0.64, 0.64)`, Translation `(0.0, 14.55, -2.0)`. Luminous frosted glass (`emission: lightColor * 1.5`).
+    *   **Bulb Halo**: Sphere, Scale `(0.736, 0.736, 0.736)`, Translation `(0.0, 14.55, -2.0)`. Unlit shader glow pass.
 
 ---
 

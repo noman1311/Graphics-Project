@@ -29,13 +29,13 @@ Scene::Scene()
     texGlass       = ProceduralTextures::CeilingMatte(64, 64);
 
     // Light setup: place it slightly offset from room center along -Z so it
-    // hangs above the table tennis table, and tune attenuation for a 15m room.
+    // hangs above the table tennis table, with balanced attenuation for a 30m hall.
     // lightPos matches the bulb's geometric center (yCeil - 0.45 = 14.55).
     lightPos        = glm::vec3(0.0f, 14.55f, -2.0f);
-    lightColor      = glm::vec3(1.00f, 0.92f, 0.78f);  // warm white ~3200K
+    lightColor      = glm::vec3(1.00f, 0.96f, 0.88f);  // clean, radiant warm-white ~3800K
     lightConstant   = 1.0f;
-    lightLinear     = 0.045f;
-    lightQuadratic  = 0.0075f;
+    lightLinear     = 0.022f;
+    lightQuadratic  = 0.0020f;
 }
 
 void Scene::setMaterial(Shader& shader, const Material& m) const

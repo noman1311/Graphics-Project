@@ -25,7 +25,6 @@ Scene::Scene()
     texSky         = ProceduralTextures::Sky(512, 512);
     texGrass       = ProceduralTextures::Grass(512, 512);
     texFabric      = ProceduralTextures::Fabric(256, 256);
-    // Glass: an off-white "milky" texture we tint blue in the material.
     texGlass       = ProceduralTextures::CeilingMatte(64, 64);
 
     // Light setup: place it slightly offset from room center along -Z so it
@@ -872,15 +871,58 @@ void Scene::DrawGameSetups(Shader& shader, bool miniGameActive, int activeCarrom
         Material::Make(glm::vec3(0.05f, 0.15f, 0.38f), 24.0f, 0.20f,
                        glm::vec3(0.0f), texDarkWood.id, 1.0f));
 
-    // Net (white cloth) and posts
-    auto netCloth = Material::Make(glm::vec3(0.92f, 0.94f, 0.96f), 16.0f, 0.10f);
-    auto netPost  = Material::Make(glm::vec3(0.18f, 0.18f, 0.20f), 64.0f, 0.40f);
-    drawMesh(shader, cube, glm::vec3(0.0f, 3.4f, 0.0f),
-        glm::vec3(0.04f, 0.30f, 5.0f), netCloth);
-    // Top white tape
+    // Net (mesh grid) and posts
+    // The net spans Y from 3.25 (bottom tape top) to 3.55 (top tape bottom),
+    // Z from -2.5 to +2.5.  We build a visible grid of thin strings.
+    auto netString = Material::Make(glm::vec3(0.92f, 0.94f, 0.96f), 16.0f, 0.10f);
+    auto netCloth  = Material::Make(glm::vec3(0.92f, 0.94f, 0.96f), 16.0f, 0.10f);
+    auto netPost   = Material::Make(glm::vec3(0.18f, 0.18f, 0.20f), 64.0f, 0.40f);
+
+    // --- Horizontal strings (span the full width, thin in Y and X) ---
+    // 5 evenly spaced horizontal threads between bottom tape (3.26) and top tape (3.54)
+    {
+        const float netBottom = 3.26f;
+        const float netTop    = 3.54f;
+        const int   hCount    = 5;
+        const float hSpacing  = (netTop - netBottom) / (float)(hCount + 1);
+        const float stringThicknessY = 0.008f;  // very thin
+        const float stringThicknessX = 0.012f;  // paper-thin depth
+        const float netWidth  = 5.0f;           // full span along Z
+
+        for (int i = 1; i <= hCount; ++i)
+        {
+            float y = netBottom + hSpacing * (float)i;
+            drawMesh(shader, cube, glm::vec3(0.0f, y, 0.0f),
+                glm::vec3(stringThicknessX, stringThicknessY, netWidth), netString);
+        }
+    }
+
+    // --- Vertical strings (span the net height, thin in Z and X) ---
+    // ~30 evenly spaced vertical threads between the two posts at Z = -2.5 and +2.5
+    {
+        const float netBottom = 3.26f;
+        const float netTop    = 3.54f;
+        const float netHeight = netTop - netBottom;
+        const float netCenterY = (netBottom + netTop) * 0.5f;
+        const float zMin = -2.45f;  // slightly inside the posts
+        const float zMax =  2.45f;
+        const int   vCount = 30;
+        const float vSpacing = (zMax - zMin) / (float)(vCount + 1);
+        const float stringThicknessZ = 0.008f;
+        const float stringThicknessX = 0.012f;
+
+        for (int i = 1; i <= vCount; ++i)
+        {
+            float z = zMin + vSpacing * (float)i;
+            drawMesh(shader, cube, glm::vec3(0.0f, netCenterY, z),
+                glm::vec3(stringThicknessX, netHeight, stringThicknessZ), netString);
+        }
+    }
+
+    // Top white tape (solid strip across the top of the net)
     drawMesh(shader, cube, glm::vec3(0.0f, 3.56f, 0.0f),
         glm::vec3(0.05f, 0.02f, 5.0f), netCloth);
-    // Bottom white tape
+    // Bottom white tape (solid strip along the bottom)
     drawMesh(shader, cube, glm::vec3(0.0f, 3.24f, 0.0f),
         glm::vec3(0.05f, 0.02f, 5.0f), netCloth);
     // Posts at each end of the net

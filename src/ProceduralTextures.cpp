@@ -22,14 +22,20 @@ static inline float Hash21Int(int ix, int iy)
 }
 static inline float Hash21(float x, float y)
 {
-    return Hash21Int((int)floorf(x), (int)floorf(y));
+    int ix = (int)x;
+    int iy = (int)y;
+    if (x < 0.0f && (float)ix != x) ix--;
+    if (y < 0.0f && (float)iy != y) iy--;
+    return Hash21Int(ix, iy);
 }
 static inline float Lerp(float a, float b, float t) { return a + (b - a) * t; }
 static inline float Smooth(float t) { return t * t * (3.0f - 2.0f * t); }
-static float ValueNoise2D(float x, float y)
+static inline float ValueNoise2D(float x, float y)
 {
-    int xi = (int)floorf(x);
-    int yi = (int)floorf(y);
+    int xi = (int)x;
+    int yi = (int)y;
+    if (x < 0.0f && (float)xi != x) xi--;
+    if (y < 0.0f && (float)yi != y) yi--;
     float xf = x - (float)xi;
     float yf = y - (float)yi;
     float v00 = Hash21Int(xi,     yi);
@@ -72,6 +78,7 @@ namespace ProceduralTextures
             int plankCountX = 6;
             float plankW = (float)W / plankCountX;
 
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 for (int x = 0; x < W; ++x)
@@ -111,6 +118,7 @@ namespace ProceduralTextures
         return Texture::CreateProcedural(w, h, "dark_wood", true,
             [](unsigned char* data, int W, int H)
         {
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 for (int x = 0; x < W; ++x)
@@ -134,6 +142,7 @@ namespace ProceduralTextures
         return Texture::CreateProcedural(w, h, "light_wood", true,
             [](unsigned char* data, int W, int H)
         {
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 for (int x = 0; x < W; ++x)
@@ -157,6 +166,7 @@ namespace ProceduralTextures
         return Texture::CreateProcedural(w, h, "plaster", true,
             [](unsigned char* data, int W, int H)
         {
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 for (int x = 0; x < W; ++x)
@@ -181,6 +191,7 @@ namespace ProceduralTextures
         return Texture::CreateProcedural(w, h, "ceiling_matte", true,
             [](unsigned char* data, int W, int H)
         {
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 for (int x = 0; x < W; ++x)
@@ -202,6 +213,7 @@ namespace ProceduralTextures
         return Texture::CreateProcedural(w, h, "tt_surface", true,
             [](unsigned char* data, int W, int H)
         {
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 for (int x = 0; x < W; ++x)
@@ -264,9 +276,14 @@ namespace ProceduralTextures
                 float dx = bx - ax;
                 float dy = by - ay;
                 float l2 = dx * dx + dy * dy;
-                if (l2 < 1e-7f) return std::hypot(px - ax, py - ay);
+                if (l2 < 1e-7f) {
+                    float qx = px - ax, qy = py - ay;
+                    return std::sqrt(qx * qx + qy * qy);
+                }
                 float t = std::clamp(((px - ax) * dx + (py - ay) * dy) / l2, 0.0f, 1.0f);
-                return std::hypot(px - (ax + t * dx), py - (ay + t * dy));
+                float qx = px - (ax + t * dx);
+                float qy = py - (ay + t * dy);
+                return std::sqrt(qx * qx + qy * qy);
             };
 
             auto drawStroke = [&](glm::vec3& dst, float dist, float radius, const glm::vec3& col) {
@@ -275,6 +292,7 @@ namespace ProceduralTextures
                     dst = glm::mix(dst, col, cov);
             };
 
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 float v = (float)y / (float)H;
@@ -288,9 +306,7 @@ namespace ProceduralTextures
                     float theta = std::atan2(v - 0.5f, u - 0.5f);
 
                     // 1. Natural blonde birch wood grain
-                    float n1 = FBM(u * 50.0f, v * 5.0f, 4, 2.0f, 0.5f);
-                    float n2 = FBM(u * 120.0f, v * 12.0f, 3, 2.0f, 0.5f);
-                    float grain = n1 * 0.75f + n2 * 0.25f;
+                    float grain = FBM(u * 50.0f, v * 5.0f, 3, 2.0f, 0.5f);
                     float rings = 0.5f + 0.5f * std::sin(grain * 14.0f + u * 4.0f);
                     float t_wood = std::clamp(rings * 0.22f + grain * 0.35f, 0.0f, 1.0f);
                     glm::vec3 col = glm::mix(c_wood1, c_wood2, t_wood);
@@ -449,6 +465,7 @@ namespace ProceduralTextures
 
             const float aa = 1.0f / (float)W;
 
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 float v = (float)y / (float)H;
@@ -621,12 +638,17 @@ namespace ProceduralTextures
                 }
             };
 
-            // Precompute strokes for hours 1 through 12
+            // Precompute strokes for hours 1 through 12 grouped into glyphs with bounding boxes
             const float r_num = 0.355f;
             const float char_w = 0.040f;
             const float char_h = 0.058f;
             const float spacing = 0.046f;
-            std::vector<Stroke2D> numeralStrokes;
+
+            struct NumeralGlyph {
+                float minX, maxX, minY, maxY;
+                std::vector<Stroke2D> strokes;
+            };
+            std::vector<NumeralGlyph> numeralGlyphs;
 
             for (int h = 1; h <= 12; ++h)
             {
@@ -638,23 +660,46 @@ namespace ProceduralTextures
                 float total_w = (float)s.length() * spacing;
                 float start_x = cx - total_w * 0.5f + spacing * 0.5f;
 
+                NumeralGlyph g;
+                g.minX = 999.0f; g.maxX = -999.0f;
+                g.minY = 999.0f; g.maxY = -999.0f;
+
                 for (size_t i = 0; i < s.length(); ++i)
                 {
                     float bx = start_x + (float)i * spacing;
                     float by = cy;
-                    addDigitStrokes(s[i], bx, by, char_w, char_h, numeralStrokes);
+                    addDigitStrokes(s[i], bx, by, char_w, char_h, g.strokes);
                 }
+
+                for (const auto& st : g.strokes)
+                {
+                    g.minX = std::min({g.minX, st.x1, st.x2});
+                    g.maxX = std::max({g.maxX, st.x1, st.x2});
+                    g.minY = std::min({g.minY, st.y1, st.y2});
+                    g.maxY = std::max({g.maxY, st.y1, st.y2});
+                }
+                g.minX -= 0.008f;
+                g.maxX += 0.008f;
+                g.minY -= 0.008f;
+                g.maxY += 0.008f;
+                numeralGlyphs.push_back(g);
             }
 
             auto distSeg = [](float px, float py, float ax, float ay, float bx, float by) -> float {
                 float dx = bx - ax;
                 float dy = by - ay;
                 float l2 = dx * dx + dy * dy;
-                if (l2 < 1e-7f) return std::hypot(px - ax, py - ay);
+                if (l2 < 1e-7f) {
+                    float qx = px - ax, qy = py - ay;
+                    return std::sqrt(qx * qx + qy * qy);
+                }
                 float t = std::clamp(((px - ax) * dx + (py - ay) * dy) / l2, 0.0f, 1.0f);
-                return std::hypot(px - (ax + t * dx), py - (ay + t * dy));
+                float qx = px - (ax + t * dx);
+                float qy = py - (ay + t * dy);
+                return std::sqrt(qx * qx + qy * qy);
             };
 
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 float v = (float)y / (float)H;
@@ -724,10 +769,15 @@ namespace ProceduralTextures
                     if (r >= 0.27f && r <= 0.42f)
                     {
                         float min_d = 999.0f;
-                        for (const auto& s : numeralStrokes)
+                        for (const auto& g : numeralGlyphs)
                         {
-                            float d = distSeg(x_rel, y_rel, s.x1, s.y1, s.x2, s.y2);
-                            if (d < min_d) min_d = d;
+                            if (x_rel < g.minX || x_rel > g.maxX || y_rel < g.minY || y_rel > g.maxY)
+                                continue;
+                            for (const auto& s : g.strokes)
+                            {
+                                float d = distSeg(x_rel, y_rel, s.x1, s.y1, s.x2, s.y2);
+                                if (d < min_d) min_d = d;
+                            }
                         }
                         if (min_d < 0.0036f + aa)
                         {
@@ -767,6 +817,7 @@ namespace ProceduralTextures
         return Texture::CreateProcedural(w, h, "sky", true,
             [](unsigned char* data, int W, int H)
         {
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 for (int x = 0; x < W; ++x)
@@ -796,6 +847,7 @@ namespace ProceduralTextures
         return Texture::CreateProcedural(w, h, "grass", true,
             [](unsigned char* data, int W, int H)
         {
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 for (int x = 0; x < W; ++x)
@@ -817,6 +869,7 @@ namespace ProceduralTextures
         return Texture::CreateProcedural(w, h, "fabric", true,
             [](unsigned char* data, int W, int H)
         {
+            #pragma omp parallel for schedule(static)
             for (int y = 0; y < H; ++y)
             {
                 for (int x = 0; x < W; ++x)

@@ -44,9 +44,6 @@ public:
     // --- Queries ---
     GameState GetState() const { return state; }
     bool IsNearTable(const glm::vec3& camPos) const;
-    glm::vec3 GetBallPos() const { return ballPos; }
-    glm::vec3 GetPlayerPaddlePos() const { return playerPaddlePos; }
-    glm::vec3 GetAiPaddlePos() const { return aiPaddlePos; }
 
     // --- Rendering ---
     // Draws the dynamic ball and paddles (call AFTER the static scene).

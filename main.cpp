@@ -48,6 +48,8 @@ bool keySpacePressedLast = false;
 bool keyEscPressedLast = false;
 bool keyEPressedLast = false;
 bool keyRPressedLast = false;
+bool keyTPressedLast = false;
+bool rayTracingEnabled = false;
 
 int main()
 {
@@ -86,6 +88,28 @@ int main()
 
     Shader phongShader("src/shaders/phong.vs", "src/shaders/phong.fs");
     Shader lightShader("src/shaders/phong.vs", "src/shaders/light.fs");
+    Shader raytraceShader("src/shaders/raytrace.vs", "src/shaders/raytrace.fs");
+
+    // Full-screen quad for Real-time Optical Ray Tracing pass
+    float quadVertices[] = {
+        // Positions (NDC)
+        -1.0f,  1.0f,
+        -1.0f, -1.0f,
+         1.0f, -1.0f,
+
+        -1.0f,  1.0f,
+         1.0f, -1.0f,
+         1.0f,  1.0f
+    };
+    unsigned int quadVAO = 0, quadVBO = 0;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glBindVertexArray(0);
 
     Scene scene;
     hud.Init(scrWidth, scrHeight);
@@ -163,25 +187,72 @@ int main()
             camPos = camera.Position;
         }
 
-        // Draw static environment and room
-        // Passes ttActive, activeCarromBoard, and chessActive so active mini-games don't draw duplicate static pieces
-        int activeCarromId = carromActive ? carromGame.GetActiveBoardId() : 0;
-        scene.Draw(phongShader, lightShader, projection, view, camPos, ttActive, activeCarromId, chessActive);
+        glm::mat4 invView = glm::inverse(view);
+        glm::vec3 camRight = glm::normalize(glm::vec3(invView[0]));
+        glm::vec3 camUp = glm::normalize(glm::vec3(invView[1]));
+        glm::vec3 camFront = -glm::normalize(glm::vec3(invView[2]));
 
-        // Draw dynamic gameplay objects
+        if (rayTracingEnabled)
+        {
+            glDisable(GL_DEPTH_TEST);
+            raytraceShader.use();
+            raytraceShader.setVec3("camPos", camPos);
+            raytraceShader.setVec3("camFront", camFront);
+            raytraceShader.setVec3("camRight", camRight);
+            raytraceShader.setVec3("camUp", camUp);
+            raytraceShader.setFloat("fovDegrees", 45.0f);
+            raytraceShader.setFloat("aspectRatio", (float)scrWidth / (float)scrHeight);
+            raytraceShader.setVec3("lightPos", scene.lightPos);
+            raytraceShader.setVec3("lightColor", scene.lightColor);
+            raytraceShader.setFloat("lightConstant", scene.lightConstant);
+            raytraceShader.setFloat("lightLinear", scene.lightLinear);
+            raytraceShader.setFloat("lightQuadratic", scene.lightQuadratic);
+            raytraceShader.setFloat("time", (float)glfwGetTime());
+
+            // Dynamic mini-game transforms
+            raytraceShader.setInt("ttActive", ttActive ? 1 : 0);
+            raytraceShader.setVec3("ttBallPos", game.GetBallPos());
+            raytraceShader.setVec3("ttPlayerPaddlePos", game.GetPlayerPaddlePos());
+            raytraceShader.setVec3("ttAiPaddlePos", game.GetAiPaddlePos());
+
+            glBindVertexArray(quadVAO);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glBindVertexArray(0);
+            glEnable(GL_DEPTH_TEST);
+        }
+        else
+        {
+            // Draw static environment and room
+            // Passes ttActive, activeCarromBoard, and chessActive so active mini-games don't draw duplicate static pieces
+            int activeCarromId = carromActive ? carromGame.GetActiveBoardId() : 0;
+            scene.Draw(phongShader, lightShader, projection, view, camPos, ttActive, activeCarromId, chessActive);
+
+            // Draw dynamic gameplay objects
+            if (ttActive)
+            {
+                game.DrawDynamic(phongShader, scene.cylinder, scene.sphere);
+            }
+            else if (carromActive)
+            {
+                carromGame.DrawDynamic(phongShader, lightShader, scene.cylinder);
+            }
+            else if (chessActive)
+            {
+                chessGame.DrawDynamic(phongShader, lightShader, scene.cube, scene.cylinder, scene.sphere);
+            }
+        }
+
+        // Draw HUDs (mini-games HUDs or exploration prompts)
         if (ttActive)
         {
-            game.DrawDynamic(phongShader, scene.cylinder, scene.sphere);
             game.DrawHUD(hud, camera.Position);
         }
         else if (carromActive)
         {
-            carromGame.DrawDynamic(phongShader, lightShader, scene.cylinder);
             carromGame.DrawHUD(hud, scrWidth, scrHeight);
         }
         else if (chessActive)
         {
-            chessGame.DrawDynamic(phongShader, lightShader, scene.cube, scene.cylinder, scene.sphere);
             chessGame.DrawHUD(hud, scrWidth, scrHeight);
         }
         else
@@ -231,9 +302,27 @@ int main()
             }
         }
 
+        // Ray Tracing Mode Status Display
+        if (rayTracingEnabled)
+        {
+            hud.BeginFrame();
+            hud.RenderText("[OPTICAL RAY TRACING: ON] (Press 'T' to toggle)", 20.0f, 20.0f, 2.0f, glm::vec3(0.35f, 1.0f, 0.55f));
+            hud.RenderText("Ray-Casted Shadows | Specular Reflections | Analytical Geometry", 20.0f, 44.0f, 1.5f, glm::vec3(0.85f, 0.92f, 1.0f));
+            hud.EndFrame();
+        }
+        else if (!ttActive && !carromActive && !chessActive)
+        {
+            hud.BeginFrame();
+            hud.RenderText("[Press 'T' for Optical Ray Tracing]", 20.0f, 20.0f, 1.5f, glm::vec3(0.70f, 0.85f, 1.0f));
+            hud.EndFrame();
+        }
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    glDeleteVertexArrays(1, &quadVAO);
+    glDeleteBuffers(1, &quadVBO);
 
     glfwTerminate();
     return 0;
@@ -241,6 +330,14 @@ int main()
 
 void processInput(GLFWwindow *window)
 {
+    // Global toggle for Real-time Optical Ray Tracing with 'T'
+    bool keyTDown = (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS);
+    if (keyTDown && !keyTPressedLast)
+    {
+        rayTracingEnabled = !rayTracingEnabled;
+    }
+    keyTPressedLast = keyTDown;
+
     bool ttActive = (game.GetState() != GameState::EXPLORATION);
     bool carromActive = carromGame.IsActive();
     bool chessActive = chessGame.IsActive();
